@@ -1,0 +1,359 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ABB ZScaler Verification Page</title>
+</head>
+
+<body bgcolor="#f5f5f5" style="font-family: verdana; font-size: 90%;">
+
+
+    <br /><br />
+    <span id="content-email" style="display: none;">
+        <div id="title-div" style="background-color: red; margin-left: 10%; margin-right: 10%;padding-top: 1%;padding-bottom: 1%;padding-left: 1%; align-items: end; display: grid; color:white;
+    grid-template-columns: 1fr 1fr;">
+            <div style="width:80%;float:left">Caution</div>
+            <div style="width:90%; text-align:right"></div>
+        </div>
+        <div style="background-color: white; margin-left: 10%; margin-right: 10%;padding-top: 1%;padding-bottom: 1%;padding-left: 1%;">
+            <h3>This page is blocked:</h3>
+            <b><a style="color:red" id="block-url-email"></a></b>
+            <p>Reason: <span id="block-reason-email"></span></p>
+            <p>
+                According to ABB Security Policies and Standards, access to this page has been restricted. Please submit
+                an
+                <a href="https://abbnow.service-now.com/cs_gr?id=sc_cat_item&sys_id=d0d7e6318738759813a564230cbb357f"
+                   style="color:red" id="unblock-link">Unblocking Request</a> if you need access for business purpose
+                only.
+            </p>
+            </p> Check out best practices on using external webmail tools on <a id="inside-link"
+                                                                                href="https://go.insideplus.abb.com/information-systems/gf-is/scenarios/be-secure/use-external-web-tools-securely"
+                                                                                style="color:red">Inside+</a>.
+            </p>
+            <p>&nbsp;</p>
+            <hr style="width:95%" />
+            <img id="company-logo3" src=""
+                 alt="" style="width:15%;height:15%; display: block;margin-left: auto;margin-right: auto;">
+        </div>
+    </span>
+    <span id="content-fileshare" style="display: none;">
+        <div id="caution-div" style="background-color: red; margin-left: 10%; margin-right: 10%;padding-top: 1%;padding-bottom: 1%;padding-left: 1%; align-items: end; display: grid; color:white;
+        grid-template-columns: 1fr 1fr;">
+            <div style="width:80%;float:left">Caution</div>
+            <div style="width:90%; text-align:right"></div>
+        </div>
+        <div style="background-color: white; margin-left: 10%; margin-right: 10%;padding-top: 1%;padding-bottom: 1%;padding-left: 1%;">
+            <h3>This page is blocked: </h3>
+            <b><a style="color:red" id="block-url-fileshare"></a></b>
+
+            <p>Reason: <span id="block-reason-fileshare"></span></p>
+            <p>
+                According to ABB Security Policies and Standards, access to this page has been restricted. Please submit
+                an
+                <a id="unblocking-link-req2"
+                   href="https://abbnow.service-now.com/cs_gr?id=sc_cat_item&sys_id=d0d7e6318738759813a564230cbb357f"
+                   style="color:red">Unblocking Request</a> if you need access for business purpose only.
+            </p>
+            </p> Check out best practices on using external webmail tools on <a id="inside-link-2"
+                                                                                href="https://go.insideplus.abb.com/information-systems/gf-is/scenarios/be-secure/use-external-web-tools-securely"
+                                                                                style="color:red">Inside+</a>.
+            </p>
+            <p>&nbsp;</p>
+            <hr style="width:95%" />
+            <img id="company-logo1" src=""
+                 alt="" style="width:15%;height:15%; display: block;margin-left: auto;margin-right: auto;">
+        </div>
+    </span>
+    <span id="content-generic" style="display: none;">
+        <div id="caution-div2" style="background-color: red; margin-left: 10%; margin-right: 10%;padding-top: 1%;padding-bottom: 1%;padding-left: 1%; align-items: end; display: grid; color:white;
+        grid-template-columns: 1fr 1fr;">
+            <div style="width:80%;float:left">Caution</div>
+            <div style="width:90%; text-align:right"></div>
+        </div>
+        <div style="background-color: white; margin-left: 10%; margin-right: 10%;padding-top: 1%;padding-bottom: 1%;padding-left: 1%;">
+            <h3>Page Blocked</h3>
+            <b><a style="color:red" id="block-url-generic"></a></b><br /><br />
+            <p id="generic-text">
+                Access to this page has been restricted according to the ABB Security Policies and
+                Standards. If you feel
+                this is in error, you may submit an <a id="unblocking-link-req3" style="color:red"
+                                                       href="https://abbnow.service-now.com/cs_gr?id=sc_cat_item&sys_id=d0d7e6318738759813a564230cbb357f">
+                    Unblocking
+                    Request
+                </a>.
+            </p>
+            <p id="generic-text-whatsapp" style="display: none;">
+                Access to this Whatsapp has been restricted according
+                to the ABB Security Policies and Standards. Any deviations from policy must be go through exception
+                request with Business Justification. You may submit an <a id="unblocking-link-req3wap" style="color:red"
+                                                                          href="https://abbnow.service-now.com/cs_gr?id=sc_cat_item&sys_id=d0d7e6318738759813a564230cbb357f">
+                    Unblocking
+                    Request
+                </a>.
+            </p>
+            <p>&nbsp;</p>
+            <hr style="width:95%" />
+            <img id="company-logo2" src=""
+                 alt="" style="width:15%;height:15%; display: block;margin-left: auto;margin-right: auto;">
+        </div>
+    </span>
+    <span id="content-ai" style="display: none;">
+        <div id="ack-div" style="background-color: red; margin-left: 10%; margin-right: 10%;padding-top: 1%;padding-bottom: 1%;padding-left: 1%; align-items: end; display: grid; color:white;
+        grid-template-columns: 1fr 1fr;">
+            <div style="width:80%;float:left">
+                Acknowledgment required
+            </div>
+            <div style="width:90%; text-align:right"></div>
+        </div>        
+        <div style="background-color: white; margin-left: 10%; margin-right: 10%;padding-top: 1%;padding-bottom: 1%;padding-left: 1%;">
+            <div>
+                <h3>
+                    You're accessing:
+                </h3>
+                <b><a style="color:red" id="block-url-ai"></a></b>
+            </div>
+            <br />
+            <span id="copilot-text-abb" style="display:none">Product is not mature and at it is still an exploration tool and not ready for ABB internal use</span>
+            <span id="copilot-text-bnr" style="display:none">Product is not mature and at it is still an exploration tool and not ready for B&R internal use</span>
+            <p>
+                Please bear in mind the following rules when using this service:
+            </p>
+            <p>
+                Do not provide:
+                <br />
+                <ul>
+                    <li>Confidential information, including ABB, customer or supplier information</li>
+                    <li>Intellectual property, R&D information, software code</li>
+                    <li>ABB-specific data or information that allows an attribution to ABB</li>
+                    <li>Personal data</li>
+
+                </ul>
+            </p>
+            <p>
+                Output data/generated content:
+                <br />
+                <ul>
+                    <li>Before using output data, ensure that it is accurate and contains no discriminatory information</li>
+                    <li>Do not use any output for ABB products/offerings</li>
+                    <li>
+                        Content generated by ChatGPT must be attribute to ChatGPT unless the content was substantially
+                        modified
+                    </li>
+                </ul>
+            </p>
+            <p>&nbsp;</p>
+
+            <button id="ack-btn" onclick="navigate();"
+                    style="background-color: red; border: 0cm; padding: 1%; color: white;border-radius: 12px;display: block;margin-left: auto;margin-right: auto;">
+                Acknowledge
+                and proceed
+            </button>
+            <br /><br />
+            <hr style="width:95%" />
+            <img id="company-logo4" src=""
+                 alt="" style="width:15%;height:15%; display: block;margin-left: auto;margin-right: auto;">
+        </div>
+    </span>
+    <span id="content-deepseek" style="display: none;">
+               
+        <div style="background-color: white; margin-left: 10%; margin-right: 10%;padding-top: 1%;padding-bottom: 1%;padding-left: 1%;">
+            <div>
+                <h3>
+                    You're accessing:
+                </h3>
+                <b><a style="color:red" id="block-url-deepseek"></a></b>
+            </div>
+            <br />
+            <span id="deepseek-text-abb" style="display:none">Deepseek is not available for use within ABB. Feel free to explore other AI tools which are approved for your use. <a id="unblocking-link-req2"
+                href="https://search.abb.com/library/Download.aspx?DocumentID=9AKK108469A7269&LanguageCode=en&DocumentPartId=&Action=Launch"
+                style="color:red">(Read more here)</a></span>
+            
+            <span id="deepseek-text-bnr" style="display:none">Deepseek is not available for use within B&R. Feel free to explore other AI tools which are approved for your use. </span>
+
+            <p>&nbsp;</p>
+
+            
+            <br /><br />
+            <hr style="width:95%" />
+            <img id="company-logodeepseek" src=""
+                 alt="" style="width:15%;height:15%; display: block;margin-left: auto;margin-right: auto;">
+        </div>
+    </span>
+
+
+    <script>
+        var url;
+	    const ipRegex = /^https?:\/\/((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(:\d+)?\/?$/;
+	    const fqdnRegex = /^https?:\/\/(?=.{1,255}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(:\d+)?\/?$/;
+        window.onload = function () {
+            var match,
+                pl = /\+/g,  // Regex for replacing addition symbol with a space
+                search = /([^&=]+)=?([^&]*)/g,
+                decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+                query = window.location.search.substring(1);
+
+            urlParams = {};
+            while (match = search.exec(query))
+                urlParams[decode(match[1])] = decode(match[2]);
+            const isValidUrl = fqdnRegex.test(urlParams["url"]) || ipRegex.test(urlParams["url"]);
+            url = "";
+			if (typeof urlParams["url"] !== "undefined") {
+				if (isValidUrl) {
+					document.getElementById('block-url-email').innerHTML = urlParams["url"];
+					document.getElementById('block-url-fileshare').innerHTML = urlParams["url"];
+					document.getElementById('block-url-generic').innerHTML = urlParams["url"];
+					document.getElementById('block-url-ai').innerHTML = urlParams["url"];
+					document.getElementById('block-url-deepseek').innerHTML = urlParams["url"];
+					url = urlParams["url"];
+				}
+				else {
+					const urlFQDNPart = urlParams["url"].replace(/(https?:\/\/[^\/]+).*/, '$1');
+					document.getElementById('block-url-email').innerHTML = urlFQDNPart;
+					document.getElementById('block-url-fileshare').innerHTML = urlFQDNPart;
+					document.getElementById('block-url-generic').innerHTML = urlFQDNPart;
+					document.getElementById('block-url-ai').innerHTML = urlFQDNPart;
+					document.getElementById('block-url-deepseek').innerHTML = urlFQDNPart;
+					url = urlFQDNPart;
+				}
+			}
+            if (typeof urlParams["reason"] !== "undefined") {
+                document.getElementById('block-reason-email').innerHTML = urlParams["reason"];
+                document.getElementById('block-reason-fileshare').innerHTML = urlParams["reason"];
+            }            
+            if (typeof urlParams["cat"] !== "undefined") {
+
+                if (urlParams["cat"] === "Webmail")
+                    document.getElementById('content-email').style.display = "inline";
+                else if (urlParams["cat"] === "FileHost")
+                    document.getElementById('content-fileshare').style.display = "inline";
+                else if (urlParams["cat"] === "AI") {
+                    document.getElementById('content-ai').style.display = "inline";
+                    if (url.indexOf('copilot.microsoft.com') > -1 || url.indexOf('www.bing.com/chat?q=Bing AI') > -1) {
+                        
+                        if (typeof urlParams["user"] !== "undefined") {
+                            if (((urlParams["user"]).toLowerCase().indexOf("br-automation.com") == (urlParams["user"]).toLowerCase().length - 17)) {
+                                document.getElementById('copilot-text-bnr').style.display = "inline";
+                            }
+                            else {
+
+                                document.getElementById('copilot-text-abb').style.display = "inline";
+                            }
+                        }
+                        else{
+                            
+                            document.getElementById('copilot-text-abb').style.display = "inline";
+                        }
+                    }
+                }
+                else if (urlParams["cat"] === "Generative AI and ML Applications") {
+                    if (url.indexOf('deepseek.com') > -1) {                        
+                        document.getElementById('content-deepseek').style.display = "inline";
+                        if (typeof urlParams["user"] !== "undefined") {
+                            if (((urlParams["user"]).toLowerCase().indexOf("br-automation.com") == (urlParams["user"]).toLowerCase().length - 17)) {                                
+                                document.getElementById('deepseek-text-bnr').style.display = "inline";
+                            }
+                            else {
+
+                                document.getElementById('deepseek-text-abb').style.display = "inline";
+                            }
+                        }
+                        else{
+                            
+                            document.getElementById('deepseek-text-abb').style.display = "inline";
+                        }
+                    }
+		else {
+                        document.getElementById('content-generic').style.display = "inline";
+                    }
+
+                }
+                else {
+                    document.getElementById('content-generic').style.display = "inline";
+                    if (url.indexOf('web.whatsapp.com') > -1) {
+                        document.getElementById('generic-text-whatsapp').style.display = "inline";
+                        document.getElementById('generic-text').style.display = "none";
+                    }
+                    else {
+                        document.getElementById('generic-text-whatsapp').style.display = "none";
+                        document.getElementById('generic-text').style.display = "inline";
+                    }
+                }
+
+            }
+            else {
+                document.getElementById('content-generic').style.display = "inline";
+                if (url.indexOf('web.whatsapp.com') > -1) {
+                    document.getElementById('generic-text-whatsapp').style.display = "inline";
+                    document.getElementById('generic-text').style.display = "none";
+                }
+                else {
+                    document.getElementById('generic-text-whatsapp').style.display = "none";
+                    document.getElementById('generic-text').style.display = "inline";
+                }
+            }
+            if (typeof urlParams["user"] !== "undefined") {
+                //if ((urlParams["user"]).toLowerCase().endsWith("br-automation.com")) {
+                if (((urlParams["user"]).toLowerCase().indexOf("br-automation.com") == (urlParams["user"]).toLowerCase().length - 17)) {
+                    document.getElementById('company-logo1').src = "https://zscalernotification.abb.com/logos/bnr.jpg";
+                    document.getElementById('company-logo1').alt = "B&R Logo";
+                    document.getElementById('company-logo2').src = "https://zscalernotification.abb.com/logos/bnr.jpg";
+                    document.getElementById('company-logo2').alt = "B&R Logo";
+                    document.getElementById('company-logo3').src = "https://zscalernotification.abb.com/logos/bnr.jpg";
+                    document.getElementById('company-logo3').alt = "B&R Logo";
+                    document.getElementById('company-logo4').src = "https://zscalernotification.abb.com/logos/bnr.jpg";
+                    document.getElementById('company-logo4').alt = "B&R Logo";
+                    document.getElementById('company-logodeepseek').src = "https://zscalernotification.abb.com/logos/bnr.jpg";
+                    document.getElementById('company-logodeepseek').alt = "B&R Logo";
+                    document.getElementById('title-div').style.backgroundColor = "#ff8800";
+                    document.getElementById('caution-div').style.backgroundColor = "#ff8800";
+                    document.getElementById('caution-div2').style.backgroundColor = "#ff8800";
+                    document.getElementById('ack-div').style.backgroundColor = "#ff8800";
+                    document.getElementById('ack-btn').style.backgroundColor = "#ff8800";
+                    document.getElementById('block-url-ai').style.color = "#ff8800";
+                    document.getElementById('block-url-email').style.color = "#ff8800";
+                    document.getElementById('unblock-link').style.color = "#ff8800";
+                    document.getElementById('inside-link').style.color = "#ff8800";
+                    document.getElementById('block-url-fileshare').style.color = "#ff8800";
+                    document.getElementById('unblocking-link-req2').style.color = "#ff8800";
+                    document.getElementById('inside-link-2').style.color = "#ff8800";
+                    document.getElementById('block-url-generic').style.color = "#ff8800";
+                    document.getElementById('unblocking-link-req3').style.color = "#ff8800";
+                    document.getElementById('unblocking-link-req3wap').style.color = "#ff8800";
+                    document.getElementById('block-url-ai').style.color = "#ff8800";
+                }
+                else {
+                    document.getElementById('company-logo1').src = "https://seekcdn.com/pacman/company-profiles/logos/432752/abb-logo.png";
+                    document.getElementById('company-logo1').alt = "ABB Logo";
+                    document.getElementById('company-logo2').src = "https://seekcdn.com/pacman/company-profiles/logos/432752/abb-logo.png";
+                    document.getElementById('company-logo2').alt = "ABB Logo";
+                    document.getElementById('company-logo3').src = "https://seekcdn.com/pacman/company-profiles/logos/432752/abb-logo.png";
+                    document.getElementById('company-logo3').alt = "ABB Logo";
+                    document.getElementById('company-logo4').src = "https://seekcdn.com/pacman/company-profiles/logos/432752/abb-logo.png";
+                    document.getElementById('company-logo4').alt = "ABB Logo";
+                    document.getElementById('company-logodeepseek').src = "https://seekcdn.com/pacman/company-profiles/logos/432752/abb-logo.png";
+                    document.getElementById('company-logodeepseek').alt = "ABb Logo";
+                }
+            }
+            else {
+                document.getElementById('company-logo1').src = "https://seekcdn.com/pacman/company-profiles/logos/432752/abb-logo.png";
+                document.getElementById('company-logo1').alt = "ABB Logo";
+                document.getElementById('company-logo2').src = "https://seekcdn.com/pacman/company-profiles/logos/432752/abb-logo.png";
+                document.getElementById('company-logo2').alt = "ABB Logo";
+                document.getElementById('company-logo3').src = "https://seekcdn.com/pacman/company-profiles/logos/432752/abb-logo.png";
+                document.getElementById('company-logo3').alt = "ABB Logo";
+                document.getElementById('company-logo4').src = "https://seekcdn.com/pacman/company-profiles/logos/432752/abb-logo.png";
+                document.getElementById('company-logo4').alt = "ABB Logo";
+                document.getElementById('company-logodeepseek').src = "https://seekcdn.com/pacman/company-profiles/logos/432752/abb-logo.png";
+                document.getElementById('company-logodeepseek').alt = "ABb Logo";
+            }
+        }
+        function navigate() {
+            window.location.href = url;
+        }
+    </script>
+
+
+
+</body>
+
+</html>
