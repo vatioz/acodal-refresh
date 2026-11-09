@@ -8,23 +8,23 @@
     {
       key: "A1",
       name: "A1 · Warm Sand & Orange",
-      czTitle: "Varianta A1: Písková & Oranžová (Původní teplejší paleta)",
-      philosophy: "Oblíbené rozvržení s vysouvacím pravým panelem (drawer) v teplých pískových tónech s původní akcentní oranžovou (#E77817).",
-      primaryAffordance: "Katalog 13 kurzů s vysouvacím detailem vpravo + časová osa 5 kroků"
+      czTitle: "Varianta A1: Písková & Oranžová (Vzdušná & soustředěná)",
+      philosophy: "Soustředěná prezentace s přepínačem kapitol (Přehled / Kurzy / Příběh & Tým) a pravým vysouvacím panelem detailu kurzu.",
+      primaryAffordance: "Stručný přehled 6 stěžejních témat (+ rozbalení všech 13) + pravý panel (drawer)"
     },
     {
       key: "A2",
       name: "A2 · Nordic Forest & Terracotta",
-      czTitle: "Varianta A2: Severský les, šalvěj & terakota",
-      philosophy: "Stejné rozvržení s pravým vysouvacím panelem, převlečené do klidné přírodní palety šalvějové mlhy (#F2F5F3), hluboké borovice (#122A23) a terakoty (#C85232).",
-      primaryAffordance: "Katalog 13 kurzů s vysouvacím detailem vpravo (přírodní lesní barevnost)"
+      czTitle: "Varianta A2: Severský les & Terakota (Vzdušná & soustředěná)",
+      philosophy: "Stejné zjednodušené rozvržení s pravým vysouvacím panelem v klidné přírodní paletě šalvěje (#F2F6F4), borovice (#122A23) a terakoty (#C85232).",
+      primaryAffordance: "Stručný přehled + přepínač kapitol + pravý panel detailu kurzu"
     },
     {
       key: "A3",
       name: "A3 · Royal Navy & Amber Gold",
-      czTitle: "Varianta A3: Královská modř, alabastr & jantarové zlato",
-      philosophy: "Stejné rozvržení s pravým vysouvacím panelem v důvěryhodné akademické a korporátní paletě chladného alabastru (#F4F7FA), hlubokého indiga (#0F1E36) a jantarového zlata (#D97706).",
-      primaryAffordance: "Katalog 13 kurzů s vysouvacím detailem vpravo (akademická & B2B modro-zlatá barevnost)"
+      czTitle: "Varianta A3: Královská modř & Jantar (Vzdušná & soustředěná)",
+      philosophy: "Stejné zjednodušené rozvržení s pravým vysouvacím panelem v akademické a korporátní paletě alabastru (#F4F7FB), indiga (#0F1E36) a jantaru (#D97706).",
+      primaryAffordance: "Stručný přehled + přepínač kapitol + pravý panel detailu kurzu"
     },
     {
       key: "B",
@@ -60,6 +60,12 @@
   const state = {
     variant: getInitialVariant(),
     // Variant A state (shared across A1, A2, A3 so switching color schemes keeps your open drawer/filter!)
+    aDensity: "focused", // "focused" (Stručný přehled ~60% méně textu) | "full" (Plný obsah na 1 stránce)
+    aView: "domu", // "domu" (Úvod & kurzy) | "jak" (Jak pracujeme & Příběh) | "onas" (Tým, reference & kontakt)
+    aAudience: "all", // "all" | "firmy" | "skoly" | "urady"
+    aShowAllCourses: false,
+    aShowAllQuotes: false,
+    aShowAllLogos: false,
     aPillar: "all",
     aDrawerTopicId: null,
     aClientTab: "firmy",
@@ -68,8 +74,13 @@
     bAudience: "skoly",
     bSelectedTopicId: "barevne-uceni",
     // Variant C state (Swiss Architectural Grid — zero nested rounded cards)
+    cDensity: "focused", // "focused" (3 architektonické listy) | "full" (vše pod sebou)
+    cView: "index", // "index" (01 Rejstřík témat) | "metodika" (02 Metodika & Data) | "tym" (03 Partnerky & Reference)
     cBrainColor: "all", // all | green | red | blue
-    cOpenTopicId: "structogram",
+    cOpenTopicId: null,
+    cShowAllCourses: false,
+    cExpandedTeamId: null,
+    cShowAllLogos: false,
     cClientSector: "firmy",
     // Variant D state (Nordic Color-Block Canvas — sentence configurator, borderless bands)
     dQuiz: {
@@ -79,11 +90,16 @@
     },
     dExpandedTopicId: "barevne-uceni",
     // Variant E state (Botanical Magazine — editorial lookbook)
+    eDensity: "focused", // "focused" (3 časopisecké dvoustrany) | "full" (celé číslo pod sebou)
+    eView: "programy", // "programy" (I. Úvodník & Kapitoly) | "cesta" (II. Pět zastavení & Reportáž) | "autorky" (III. Autorky & Kolofon)
     ePillar: "all",
-    eOpenTopicId: "structogram",
+    eOpenTopicId: null,
+    eShowAllCourses: false,
+    eExpandedTeamId: null,
     eActiveStep: 1,
     // Switcher inspector visibility
-    showStateHud: true,
+    showStateHud: false,
+    switcherMinimized: false,
     inquiryToast: null
   };
 
@@ -129,6 +145,9 @@
     } else if (e.key === "ArrowRight") {
       e.preventDefault();
       cycleVariant(1);
+    } else if (e.key === "h" || e.key === "H") {
+      state.switcherMinimized = !state.switcherMinimized;
+      render();
     } else if (e.key === "Escape") {
       if (state.aDrawerTopicId || state.dModalTopicId) {
         state.aDrawerTopicId = null;
@@ -152,7 +171,36 @@
       state.showStateHud = !state.showStateHud;
       render();
     },
+    toggleSwitcher() {
+      state.switcherMinimized = !state.switcherMinimized;
+      render();
+    },
     // Variant A actions
+    setAAudience(aud) {
+      state.aAudience = aud;
+      render();
+    },
+    setAView(view) {
+      state.aView = view;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      render();
+    },
+    toggleADensity() {
+      state.aDensity = state.aDensity === "focused" ? "full" : "focused";
+      render();
+    },
+    toggleAShowAllCourses() {
+      state.aShowAllCourses = !state.aShowAllCourses;
+      render();
+    },
+    toggleAShowAllQuotes() {
+      state.aShowAllQuotes = !state.aShowAllQuotes;
+      render();
+    },
+    toggleAShowAllLogos() {
+      state.aShowAllLogos = !state.aShowAllLogos;
+      render();
+    },
     setAPillar(p) {
       state.aPillar = p;
       render();
@@ -167,6 +215,7 @@
     },
     setAClientTab(tab) {
       state.aClientTab = tab;
+      state.aShowAllLogos = false;
       render();
     },
     toggleATeam(id) {
@@ -187,6 +236,15 @@
       render();
     },
     // Variant C actions (Swiss Architectural Grid)
+    setCView(view) {
+      state.cView = view;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      render();
+    },
+    toggleCDensity() {
+      state.cDensity = state.cDensity === "focused" ? "full" : "focused";
+      render();
+    },
     setCBrainColor(color) {
       state.cBrainColor = color;
       render();
@@ -195,8 +253,21 @@
       state.cOpenTopicId = state.cOpenTopicId === topicId ? null : topicId;
       render();
     },
+    toggleCShowAllCourses() {
+      state.cShowAllCourses = !state.cShowAllCourses;
+      render();
+    },
+    toggleCTeam(id) {
+      state.cExpandedTeamId = state.cExpandedTeamId === id ? null : id;
+      render();
+    },
+    toggleCShowAllLogos() {
+      state.cShowAllLogos = !state.cShowAllLogos;
+      render();
+    },
     setCClientSector(sector) {
       state.cClientSector = sector;
+      state.cShowAllLogos = false;
       render();
     },
     // Variant D actions (Nordic Color-Block Canvas)
@@ -209,12 +280,29 @@
       render();
     },
     // Variant E actions (Botanical Magazine Lookbook)
+    setEView(view) {
+      state.eView = view;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      render();
+    },
+    toggleEDensity() {
+      state.eDensity = state.eDensity === "focused" ? "full" : "focused";
+      render();
+    },
     setEPillar(pillar) {
       state.ePillar = pillar;
       render();
     },
     toggleETopic(topicId) {
       state.eOpenTopicId = state.eOpenTopicId === topicId ? null : topicId;
+      render();
+    },
+    toggleEShowAllCourses() {
+      state.eShowAllCourses = !state.eShowAllCourses;
+      render();
+    },
+    toggleETeam(id) {
+      state.eExpandedTeamId = state.eExpandedTeamId === id ? null : id;
       render();
     },
     setEStep(stepNum) {
@@ -363,38 +451,62 @@
   };
 
   // ============================================================================
-  // VARIANT A: WARM EDITORIAL STORY ("Hřejivý příběh & ucelený přehled")
+  // VARIANT A: WARM EDITORIAL STORY ("Vzdušný přehled s přepínačem kapitol & pravým panelem")
   // ============================================================================
   function renderVariantA(themeKey = "A1") {
     const T = A_THEMES[themeKey] || A_THEMES.A1;
+    const isFocused = state.aDensity === "focused";
+    const view = state.aView || "domu"; // "domu" | "jak" | "onas"
 
-    const filteredTopics = state.aPillar === "all"
-      ? DATA.topics
-      : DATA.topics.filter((t) => t.pillar === state.aPillar);
+    // Filter topics by audience OR pillar
+    let filteredTopics = DATA.topics;
+    if (state.aAudience !== "all") {
+      filteredTopics = filteredTopics.filter((t) => t.audiences.includes(state.aAudience));
+    }
+    if (state.aPillar !== "all") {
+      filteredTopics = filteredTopics.filter((t) => t.pillar === state.aPillar);
+    }
+
+    // In Focused mode, show top 6 courses first unless expanded
+    const visibleTopics = (isFocused && !state.aShowAllCourses && state.aPillar === "all" && state.aAudience === "all")
+      ? filteredTopics.slice(0, 6)
+      : filteredTopics;
+    const hiddenTopicsCount = filteredTopics.length - visibleTopics.length;
 
     const activeTopic = state.aDrawerTopicId
       ? DATA.topics.find((t) => t.id === state.aDrawerTopicId)
       : null;
 
     const currentClients = DATA.clients[state.aClientTab] || DATA.clients.firmy;
+    const visibleClients = (isFocused && !state.aShowAllLogos)
+      ? currentClients.slice(0, 6)
+      : currentClients;
+
+    const visibleQuotes = (isFocused && !state.aShowAllQuotes)
+      ? DATA.caseStudy.testimonials.slice(0, 2)
+      : DATA.caseStudy.testimonials;
+
+    // Show sections depending on whether user is in Focused 3-Tab mode or Full Single-Page mode
+    const showDomu = !isFocused || view === "domu";
+    const showJak = !isFocused || view === "jak";
+    const showOnas = !isFocused || view === "onas";
 
     return `
       <div class="min-h-screen ${T.pageBg} ${T.pageText} font-sans pb-32 ${T.selection} transition-colors duration-300">
-        <!-- Top Trust & Language Ribbon + Instant Palette Switcher for Variant A -->
-        <div class="${T.ribbonBg} ${T.ribbonText} text-xs py-2.5 px-4 sm:px-8 border-b border-white/10">
-          <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-            <div class="flex items-center gap-4">
+        <!-- Top Ribbon: Palette Switcher + Focused vs. Full Density Switch -->
+        <div class="${T.ribbonBg} ${T.ribbonText} text-xs py-2 px-4 sm:px-8 border-b border-white/10">
+          <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
               <span class="inline-flex items-center gap-1.5 font-medium text-white">
                 <span class="w-2 h-2 rounded-full ${T.accentBg}"></span>
-                Akreditace MPSV & MŠMT
+                Akreditace MPSV & MŠMT • Structogram®
               </span>
-              <span class="hidden md:inline opacity-40">•</span>
-              <span class="hidden md:inline ${T.ribbonMuted}">Licencovaný tréninkový systém Structogram®</span>
+              <span class="hidden md:inline opacity-40">|</span>
+              <span class="hidden md:inline ${T.ribbonMuted}">ČJ / AJ / NJ</span>
             </div>
 
-            <!-- Live Color Theme Switcher inside Variant A -->
+            <!-- Controls: Color Palette (A1/A2/A3) + Density Toggle (Focused vs. Full) -->
             <div class="flex flex-wrap items-center gap-2">
-              <span class="text-[11px] uppercase tracking-wider opacity-75 hidden sm:inline">Barevná varianta A:</span>
               <div class="inline-flex items-center bg-white/10 p-0.5 rounded-full border border-white/15">
                 ${Object.values(A_THEMES).map((thm) => {
                   const isCurrent = thm.key === T.key;
@@ -409,387 +521,454 @@
                         <span class="w-2.5 h-2.5 rounded-full border border-black/20" style="background:${thm.swatch[1]}"></span>
                         <span class="w-2.5 h-2.5 rounded-full border border-black/20" style="background:${thm.swatch[2]}"></span>
                       </span>
-                      <span>${thm.label}</span>
+                      <span>${thm.key}</span>
                     </button>
                   `;
                 }).join("")}
               </div>
+
+              <!-- Density Toggle -->
+              <button
+                onclick="PROTO.toggleADensity()"
+                title="Přepnout mezi stručným webem rozděleným do 3 kapitol a dlouhou stránkou se vším najednou"
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${
+                  isFocused
+                    ? "bg-emerald-500/20 text-emerald-200 border-emerald-400/40 hover:bg-emerald-500/30"
+                    : "bg-white/10 text-white/80 border-white/20 hover:bg-white/20"
+                }"
+              >
+                <span>${isFocused ? "✨ Režim: Stručný a čistý (3 podstránky)" : "📜 Režim: Vše na jedné dlouhé stránce"}</span>
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- Sticky Editorial Navbar (Visible on desktop — fixes broken hamburger from old WP site!) -->
+        <!-- Sticky Header with Clean 3-Page Navigation -->
         <header class="sticky top-0 z-30 ${T.headerBg} backdrop-blur-md border-b ${T.border}">
-          <div class="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between">
-            <a href="#top" class="flex items-center gap-3 group">
-              <img src="${DATA.brand.logo}" alt="A co dál logo" class="h-11 w-auto object-contain" />
+          <div class="max-w-6xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-4">
+            <a href="#top" onclick="PROTO.setAView('domu'); return false;" class="flex items-center gap-3 group shrink-0">
+              <img src="${DATA.brand.logo}" alt="A co dál logo" class="h-10 w-auto object-contain" />
               <div class="hidden sm:block">
                 <span class="block font-serif text-lg font-bold tracking-tight ${T.heading} leading-none">A CO DÁL</span>
-                <span class="block text-[11px] ${T.subMuted} tracking-wider uppercase mt-1">Vzdělávání prožitkem • Ostrava & celá ČR</span>
+                <span class="block text-[11px] ${T.subMuted} tracking-wider uppercase mt-1">Vzdělávání prožitkem</span>
               </div>
             </a>
 
-            <nav class="hidden lg:flex items-center gap-7 text-sm font-medium ${T.bodyMuted}">
-              <a href="#co-delame" class="${T.accentHoverText} transition-colors">Co děláme (13 témat)</a>
-              <a href="#jak-to-probiha" class="${T.accentHoverText} transition-colors">Jak to probíhá</a>
-              <a href="#pribeh-klienta" class="${T.accentHoverText} transition-colors">Příběh klienta</a>
-              <a href="#nas-tym" class="${T.accentHoverText} transition-colors">Náš tým</a>
-              <a href="#reference" class="${T.accentHoverText} transition-colors">Reference (47)</a>
-              <a href="#kontakty" class="${T.accentHoverText} transition-colors">Kontakty</a>
-            </nav>
+            ${isFocused ? `
+              <!-- Clean 3-Section Switcher (No endless scrolling!) -->
+              <nav class="flex items-center bg-white/80 p-1 rounded-full border ${T.border} shadow-2xs">
+                <button
+                  onclick="PROTO.setAView('domu')"
+                  class="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                    view === "domu" ? T.pillActive : T.bodyMuted + " hover:text-black"
+                  }"
+                >
+                  1. Kurzy a témata
+                </button>
+                <button
+                  onclick="PROTO.setAView('jak')"
+                  class="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                    view === "jak" ? T.pillActive : T.bodyMuted + " hover:text-black"
+                  }"
+                >
+                  2. Jak pracujeme & Příběh z praxe
+                </button>
+                <button
+                  onclick="PROTO.setAView('onas')"
+                  class="px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                    view === "onas" ? T.pillActive : T.bodyMuted + " hover:text-black"
+                  }"
+                >
+                  3. Náš tým & Reference
+                </button>
+              </nav>
+            ` : `
+              <nav class="hidden lg:flex items-center gap-6 text-sm font-medium ${T.bodyMuted}">
+                <a href="#co-delame" class="${T.accentHoverText} transition-colors">Témata (13)</a>
+                <a href="#jak-to-probiha" class="${T.accentHoverText} transition-colors">5 kroků</a>
+                <a href="#pribeh-klienta" class="${T.accentHoverText} transition-colors">Příběh z praxe</a>
+                <a href="#nas-tym" class="${T.accentHoverText} transition-colors">Tým (4)</a>
+                <a href="#reference" class="${T.accentHoverText} transition-colors">Reference</a>
+              </nav>
+            `}
 
-            <div class="flex items-center gap-3">
-              <button onclick="PROTO.triggerInquiry('Domluvit nezávaznou schůzku (${T.label})')" class="${T.accentBtn} text-sm font-semibold px-5 py-2.5 rounded-full shadow-sm transition-all cursor-pointer">
+            <div class="flex items-center gap-3 shrink-0">
+              <button onclick="PROTO.triggerInquiry('Nezávazná konzultace (${T.label})')" class="${T.accentBtn} text-xs sm:text-sm font-semibold px-4 sm:px-5 py-2.5 rounded-full shadow-sm transition-all cursor-pointer">
                 Domluvit schůzku
               </button>
             </div>
           </div>
         </header>
 
-        <!-- Editorial Split Hero -->
-        <section id="top" class="relative overflow-hidden pt-10 pb-20 lg:py-20 px-4 sm:px-8">
-          <div class="max-w-7xl mx-auto grid lg:grid-cols-12 gap-12 items-center">
-            <div class="lg:col-span-7 space-y-6">
-              <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full ${T.heroBadge} text-xs font-semibold tracking-wide uppercase">
-                <span>Učení prožitkem • Aplikovaná neurověda • Structogram®</span>
+        ${showDomu ? `
+          <!-- CONCISE HERO: Short, scannable, human -->
+          <section id="top" class="pt-10 pb-14 lg:py-16 px-4 sm:px-8">
+            <div class="max-w-6xl mx-auto grid lg:grid-cols-12 gap-10 items-center">
+              <div class="lg:col-span-7 space-y-5">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full ${T.heroBadge} text-xs font-semibold tracking-wide">
+                  <span>Pro firmy, sborovny škol a veřejnou správu</span>
+                </div>
+
+                <h1 class="font-serif text-4xl sm:text-5xl font-bold ${T.heading} leading-[1.12] tracking-tight">
+                  Školíme týmy i&nbsp;jednotlivce. <br />
+                  <span class="${T.accentText} italic font-normal">Prakticky a prožitkem.</span>
+                </h1>
+
+                <p class="text-base sm:text-lg ${T.bodyMuted} leading-relaxed max-w-xl">
+                  Žádné nudné přednášky. Pomáháme lídrům, učitelům i týmům lépe komunikovat, pochopit vlastní osobnost díky metodě <strong>Structogram®</strong> a předcházet vyhoření.
+                </p>
+
+                <!-- Quick Audience Filter Pills right in the Hero -->
+                <div class="pt-2">
+                  <div class="text-xs font-bold uppercase tracking-wider ${T.subMuted} mb-2.5">Pro koho hledáte rozvoj? (Kliknutím vyfiltrujete kurzy níže):</div>
+                  <div class="flex flex-wrap gap-2">
+                    ${[
+                      { id: "all", label: "Všechny programy (13)" },
+                      { id: "firmy", label: "🏢 Pro firmy a lídry" },
+                      { id: "skoly", label: "🎓 Pro školy a sborovny" },
+                      { id: "urady", label: "🏛️ Pro úřady a instituce" }
+                    ].map((aud) => {
+                      const active = state.aAudience === aud.id;
+                      return `
+                        <button
+                          onclick="PROTO.setAAudience('${aud.id}')"
+                          class="px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                            active ? T.pillActive : "bg-white " + T.bodyMuted + " border " + T.border + " " + T.hoverBorderAccent
+                          }"
+                        >
+                          ${aud.label}
+                        </button>
+                      `;
+                    }).join("")}
+                  </div>
+                </div>
               </div>
 
-              <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold ${T.heading} leading-[1.12] tracking-tight">
-                Školíme týmy i&nbsp;jednotlivce. <br />
-                <span class="${T.accentText} italic font-normal">A co dál?</span>
-              </h1>
-
-              <p class="text-lg sm:text-xl ${T.bodyMuted} leading-relaxed max-w-2xl">
-                Jsme tu s vámi pro úspěch ve vzdělávání. Souhra v týmu přináší pracovní pohodu a lepší výsledky. Spolu s námi tvoříte a realizujete strategii dlouhodobého rozvoje v oblasti <strong>vedení lidí, osobního rozvoje, komunikace a work-life balance</strong>.
-              </p>
-
-              <!-- 3 Target Segments Quick Entry -->
-              <div class="grid sm:grid-cols-3 gap-3 pt-2">
-                <a href="#co-delame" onclick="PROTO.setAPillar('teams')" class="group p-4 rounded-2xl bg-white border ${T.border} ${T.hoverBorderAccent} transition-all shadow-xs">
-                  <div class="text-xs font-bold uppercase tracking-wider ${T.accentText}">01 • Pro firmy</div>
-                  <div class="font-serif font-bold text-base ${T.heading} mt-1 ${T.groupHoverAccentText}">Lídři, obchod a týmy →</div>
-                  <p class="text-xs ${T.subMuted} mt-1">Výcvik na pracovišti, audit procesů, Structogram®</p>
-                </a>
-                <a href="#co-delame" onclick="PROTO.setAPillar('growth')" class="group p-4 rounded-2xl bg-white border ${T.border} ${T.hoverBorderAccent} transition-all shadow-xs">
-                  <div class="text-xs font-bold uppercase tracking-wider text-[#2E7D5B]">02 • Pro školy</div>
-                  <div class="font-serif font-bold text-base ${T.heading} mt-1 ${T.groupHoverAccentText}">Sborovny a ředitelé →</div>
-                  <p class="text-xs ${T.subMuted} mt-1">Barevné učení, výjezdní sborovny, vize školy</p>
-                </a>
-                <a href="#co-delame" onclick="PROTO.setAPillar('neuro')" class="group p-4 rounded-2xl bg-white border ${T.border} ${T.hoverBorderAccent} transition-all shadow-xs">
-                  <div class="text-xs font-bold uppercase tracking-wider text-[#2B5B84]">03 • Pro úřady</div>
-                  <div class="font-serif font-bold text-base ${T.heading} mt-1 ${T.groupHoverAccentText}">Instituce, kraje, MAS →</div>
-                  <p class="text-xs ${T.subMuted} mt-1">Akreditace MPSV, komunikace, prevence vyhoření</p>
-                </a>
-              </div>
-            </div>
-
-            <!-- Right Hero Photo Card -->
-            <div class="lg:col-span-5 relative">
-              <div class="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white aspect-[4/3] lg:aspect-[5/4]">
-                <img src="${DATA.photos.heroHome}" alt="Tým A co dál — Magda, Lenka, Tereza a Andrea" class="w-full h-full object-cover" />
-                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent"></div>
-                <div class="absolute bottom-4 left-4 right-4 text-white p-4 rounded-2xl bg-black/45 backdrop-blur-md border border-white/15">
-                  <p class="text-xs uppercase tracking-widest ${T.darkHighlight} font-semibold">Jsme kreativní parta z Ostravy</p>
-                  <p class="font-serif text-base mt-0.5">„Poskytujeme poradenství, konzultujeme a školíme s osobním zaujetím, individuální péčí a profesionálně.“</p>
+              <!-- Right Hero Photo (Clean, no heavy text overlay covering faces) -->
+              <div class="lg:col-span-5">
+                <div class="relative rounded-2xl overflow-hidden shadow-xl border-4 border-white aspect-[4/3]">
+                  <img src="${DATA.photos.heroHome}" alt="Lektorky A co dál — Magda, Lenka, Tereza a Andrea" class="w-full h-full object-cover" />
+                </div>
+                <div class="mt-3 flex items-center justify-between text-xs ${T.subMuted} px-1">
+                  <span>Lektorský tým A CO DÁL (Ostrava & celá ČR)</span>
+                  <button onclick="PROTO.setAView('onas')" class="font-semibold ${T.accentText} hover:underline cursor-pointer">Poznat náš tým →</button>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Interactive Training Catalog (Consolidates 13 separate micro-pages into 1 interactive view with slide-over drawer) -->
-        <section id="co-delame" class="py-20 px-4 sm:px-8 bg-white border-y ${T.border}">
-          <div class="max-w-7xl mx-auto">
-            <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
-              <div>
-                <span class="text-xs font-bold uppercase tracking-widest ${T.accentText}">Co děláme • 13 akreditovaných a rozvojových oblastí</span>
-                <h2 class="font-serif text-3xl sm:text-4xl font-bold ${T.heading} mt-2">
-                  Vyberte si oblast rozvoje. <span class="font-normal italic ${T.subMuted}">Kliknutím otevřete detail programu v pravém panelu.</span>
-                </h2>
-                <p class="${T.bodyMuted} mt-2 max-w-3xl text-sm sm:text-base">
-                  Na původním webu bylo každé téma schované na samostatné podstránce. Zde si můžete všechny programy (včetně obnoveného programu <strong>Strategický rozvoj škol</strong>) okamžitě filtrovat a prohlédnout v pravém vysouvacím panelu.
-                </p>
+          <!-- FOCUSED COURSE CATALOG: Scannable cards + Slide-over Right Panel -->
+          <section id="co-delame" class="py-14 px-4 sm:px-8 bg-white border-y ${T.border}">
+            <div class="max-w-6xl mx-auto">
+              <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                <div>
+                  <span class="text-xs font-bold uppercase tracking-widest ${T.accentText}">Nabídka programů</span>
+                  <h2 class="font-serif text-2xl sm:text-3xl font-bold ${T.heading} mt-1">
+                    Klikněte na téma pro zobrazení osnovy v pravém panelu
+                  </h2>
+                </div>
+
+                <!-- 3 Pillar Filter Pills -->
+                <div class="flex flex-wrap gap-1.5">
+                  ${DATA.pillars.map((p) => {
+                    const active = state.aPillar === p.id;
+                    return `
+                      <button
+                        onclick="PROTO.setAPillar('${p.id}')"
+                        class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                          active ? T.pillActive : T.pillInactive
+                        }"
+                      >
+                        ${p.label}
+                      </button>
+                    `;
+                  }).join("")}
+                </div>
               </div>
 
-              <!-- Pillar Filter Pills -->
-              <div class="flex flex-wrap gap-2">
-                ${DATA.pillars.map((p) => {
-                  const active = state.aPillar === p.id;
+              <!-- Clean, Compact Course Cards (1-line summary, click opens right drawer) -->
+              <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                ${visibleTopics.map((topic) => {
+                  const badge = getPillarBadge(topic.pillar);
+                  const isSelected = state.aDrawerTopicId === topic.id;
                   return `
-                    <button
-                      onclick="PROTO.setAPillar('${p.id}')"
-                      class="px-4 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-                        active ? T.pillActive : T.pillInactive
-                      }"
+                    <article
+                      onclick="PROTO.openADrawer('${topic.id}')"
+                      class="group rounded-xl ${T.cardBg} p-5 border ${isSelected ? "ring-2 ring-offset-2 border-transparent" : T.border} ${T.hoverBorderAccent} transition-all duration-150 shadow-2xs hover:shadow-md flex flex-col justify-between cursor-pointer"
                     >
-                      ${p.label} <span class="opacity-70 ml-1">(${p.count})</span>
-                    </button>
+                      <div>
+                        <div class="flex items-center justify-between gap-2 mb-3">
+                          <span class="px-2 py-0.5 rounded text-[11px] font-semibold border ${badge.bg} ${badge.text} ${badge.border}">
+                            ${topic.pillarLabel}
+                          </span>
+                          ${topic.triColors ? `
+                            <span class="inline-flex items-center gap-1" title="Metoda Structogram®">
+                              <span class="w-2.5 h-2.5 rounded-full bg-[#3A8E58]"></span>
+                              <span class="w-2.5 h-2.5 rounded-full bg-[#D6453D]"></span>
+                              <span class="w-2.5 h-2.5 rounded-full bg-[#2E6DA4]"></span>
+                            </span>
+                          ` : `<span class="font-mono text-[11px] ${T.subMuted}">#${topic.number}</span>`}
+                        </div>
+
+                        <h3 class="font-serif text-lg font-bold ${T.heading} ${T.groupHoverAccentText} transition-colors">
+                          ${topic.title}
+                        </h3>
+                        <p class="text-xs sm:text-sm ${T.bodyMuted} mt-1.5 line-clamp-2 leading-relaxed">
+                          ${topic.subtitle}
+                        </p>
+                      </div>
+
+                      <div class="mt-4 pt-3 border-t ${T.borderSoft} flex items-center justify-between text-xs">
+                        <span class="${T.subMuted}">${getAudienceBadges(topic.audiences).join(" • ")}</span>
+                        <span class="font-bold ${T.accentText} group-hover:translate-x-0.5 transition-transform">
+                          Detail →
+                        </span>
+                      </div>
+                    </article>
                   `;
                 }).join("")}
               </div>
-            </div>
 
-            <!-- Cards Grid -->
-            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              ${filteredTopics.map((topic) => {
-                const badge = getPillarBadge(topic.pillar);
-                const audLabels = getAudienceBadges(topic.audiences);
-                const isSelected = state.aDrawerTopicId === topic.id;
-                return `
-                  <article
-                    onclick="PROTO.openADrawer('${topic.id}')"
-                    class="group relative rounded-2xl ${T.cardBg} p-6 border ${isSelected ? "ring-2 ring-offset-2 border-transparent" : T.border} ${T.hoverBorderAccent} transition-all duration-200 shadow-xs hover:shadow-xl flex flex-col justify-between cursor-pointer"
+              <!-- Progressive Disclosure Button for remaining courses -->
+              ${isFocused && state.aPillar === "all" && state.aAudience === "all" ? `
+                <div class="mt-8 text-center">
+                  <button
+                    onclick="PROTO.toggleAShowAllCourses()"
+                    class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs sm:text-sm font-semibold border ${T.border} bg-white ${T.heading} ${T.hoverBorderAccent} shadow-2xs cursor-pointer transition-all"
                   >
-                    <div>
-                      <div class="flex items-center justify-between gap-2 mb-4">
-                        <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold border ${badge.bg} ${badge.text} ${badge.border}">
-                          ${topic.pillarLabel}
-                        </span>
-                        <span class="font-mono text-xs font-bold ${T.subMuted}">#${topic.number}</span>
-                      </div>
+                    ${state.aShowAllCourses
+                      ? "Zobrazit jen 6 hlavních témat ↑"
+                      : `Zobrazit všech ${filteredTopics.length} témat (+${hiddenTopicsCount} dalších) ↓`
+                    }
+                  </button>
+                </div>
+              ` : ""}
 
-                      ${topic.triColors ? `
-                        <div class="flex items-center gap-1.5 mb-3" title="Barevná typologie Structogram® (Zelená, Červená, Modrá)">
-                          <span class="w-3 h-3 rounded-full bg-[#3A8E58]"></span>
-                          <span class="w-3 h-3 rounded-full bg-[#D6453D]"></span>
-                          <span class="w-3 h-3 rounded-full bg-[#2E6DA4]"></span>
-                          <span class="text-[11px] ${T.subMuted} ml-1 font-medium">Metoda Structogram®</span>
-                        </div>
-                      ` : ""}
-
-                      <h3 class="font-serif text-xl font-bold ${T.heading} ${T.groupHoverAccentText} transition-colors">
-                        ${topic.title}
-                      </h3>
-                      <p class="text-sm ${T.bodyMuted} mt-2 line-clamp-3 leading-relaxed">
-                        ${topic.subtitle}
-                      </p>
-                    </div>
-
-                    <div class="mt-6 pt-4 border-t ${T.borderSoft} flex items-center justify-between gap-2">
-                      <div class="flex flex-wrap gap-1">
-                        ${audLabels.map((lbl) => `
-                          <span class="text-[11px] bg-white px-2 py-0.5 rounded border ${T.border} ${T.bodyMuted} font-medium">${lbl}</span>
-                        `).join("")}
-                      </div>
-                      <span class="text-xs font-bold ${T.accentText} group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        Co získáte (${topic.points.length}) →
-                      </span>
-                    </div>
-                  </article>
-                `;
-              }).join("")}
-            </div>
-
-            <!-- Custom Cooperation Formats Banner -->
-            <div class="mt-12 rounded-3xl overflow-hidden relative ${T.darkSectionBg} text-white p-8 sm:p-10 grid lg:grid-cols-12 gap-8 items-center">
-              <div class="lg:col-span-8 space-y-3">
-                <span class="text-xs uppercase tracking-widest ${T.darkHighlight} font-bold">Formy spolupráce na míru</span>
-                <h3 class="font-serif text-2xl sm:text-3xl font-bold">Výcvik přímo na pracovišti, kurzy, semináře i individuální koučink</h3>
-                <p class="text-sm sm:text-base ${T.darkBody} leading-relaxed">
-                  Naší specialitou je výcvik na pracovišti spojený s tréninkem dovedností a auditem pracovních procesů. Pomáháme s výběrem zaměstnanců a jejich umisťováním na optimální pozice. Nabízíme také prémiový koučink klíčových pracovníků, poradenství a mentoring.
-                </p>
-              </div>
-              <div class="lg:col-span-4 flex lg:justify-end">
-                <button onclick="PROTO.triggerInquiry('Konzultace formy spolupráce na míru')" class="${T.accentBtn} font-semibold px-6 py-3.5 rounded-full text-sm shadow-lg transition-all cursor-pointer">
-                  Poptat program na míru →
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 5 Steps Section (With RECOVERED Illustrations that were broken on staging domain!) -->
-        <section id="jak-to-probiha" class="py-20 px-4 sm:px-8 ${T.pageBg}">
-          <div class="max-w-7xl mx-auto">
-            <div class="text-center max-w-3xl mx-auto mb-14">
-              <span class="text-xs font-bold uppercase tracking-widest ${T.accentText}">Jak to probíhá • Krok za krokem</span>
-              <h2 class="font-serif text-3xl sm:text-4xl font-bold ${T.heading} mt-2">
-                Od prvního setkání po dlouhodobý posun
-              </h2>
-              <p class="text-sm sm:text-base ${T.bodyMuted} mt-2">
-                Všech 5 originálních ilustrací, které na starém webu nefungovaly kvůli chybnému odkazu na testovací server, jsme zachránili a zasadili do přehledné časové osy.
-              </p>
-            </div>
-
-            <div class="grid md:grid-cols-5 gap-6">
-              ${DATA.steps.map((s) => `
-                <div class="bg-white rounded-2xl p-6 border ${T.border} shadow-xs flex flex-col justify-between relative group ${T.hoverBorderAccent} transition-all">
-                  <div>
-                    <div class="flex items-center justify-between mb-4">
-                      <span class="w-8 h-8 rounded-full ${T.accentBg} text-white font-bold text-sm flex items-center justify-center shadow-xs">
-                        ${s.step}
-                      </span>
-                      <img src="${s.image}" alt="${s.title}" class="w-16 h-16 rounded-full object-cover border-2 ${T.border} group-hover:scale-105 transition-transform" />
-                    </div>
-                    <h3 class="font-serif text-lg font-bold ${T.heading}">${s.title}</h3>
-                    <p class="text-xs font-semibold ${T.accentText} mt-0.5 mb-3">${s.subtitle}</p>
-                    <p class="text-xs sm:text-sm ${T.bodyMuted} leading-relaxed">${s.text}</p>
+              ${isFocused ? `
+                <!-- Gentle Next-Tab Prompt at bottom of Tab 1 -->
+                <div class="mt-12 pt-8 border-t ${T.border} flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div class="text-sm ${T.bodyMuted}">
+                    Chcete vědět, jak příprava školení probíhá a jak hodnotí kurzy účastníci?
                   </div>
+                  <button onclick="PROTO.setAView('jak')" class="px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold ${T.pillInactive} cursor-pointer">
+                    Přejít na: 2. Jak pracujeme & Příběh z praxe →
+                  </button>
                 </div>
-              `).join("")}
+              ` : ""}
             </div>
-          </div>
-        </section>
+          </section>
+        ` : ""}
 
-        <!-- Featured Case Study: ZŠ Hlučín - Rovniny -->
-        <section id="pribeh-klienta" class="py-20 px-4 sm:px-8 ${T.darkSectionBg} text-white relative overflow-hidden">
-          <div class="max-w-7xl mx-auto relative z-10">
-            <div class="grid lg:grid-cols-12 gap-12 items-start">
-              <div class="lg:col-span-5 space-y-6 bg-white/5 p-8 rounded-3xl border border-white/10 backdrop-blur-xs">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full ${T.darkBadge} text-xs font-semibold">
-                  Příběh našeho klienta • 52 pedagogů
+        ${showJak ? `
+          <!-- COMPACT 5 STEPS: Short, visual strip instead of 5 text-heavy paragraphs -->
+          <section id="jak-to-probiha" class="py-14 px-4 sm:px-8 ${T.pageBg}">
+            <div class="max-w-6xl mx-auto">
+              <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+                <div>
+                  <span class="text-xs font-bold uppercase tracking-widest ${T.accentText}">Jak pracujeme</span>
+                  <h2 class="font-serif text-2xl sm:text-3xl font-bold ${T.heading} mt-1">
+                    5 kroků od prvního kafe po reálnou změnu v týmu
+                  </h2>
                 </div>
-                <h2 class="font-serif text-3xl font-bold leading-tight">
-                  Ohlédnutí za zážitkovým kurzem úspěšné komunikace
+                <span class="text-xs ${T.subMuted}">Výcvik přímo na pracovišti, seminář i koučink</span>
+              </div>
+
+              <div class="grid sm:grid-cols-2 md:grid-cols-5 gap-4">
+                ${DATA.steps.map((s) => `
+                  <div class="bg-white rounded-xl p-5 border ${T.border} flex flex-col justify-between">
+                    <div>
+                      <div class="flex items-center justify-between mb-3">
+                        <span class="w-7 h-7 rounded-full ${T.accentBg} text-white font-bold text-xs flex items-center justify-center">
+                          ${s.step}
+                        </span>
+                        <img src="${s.image}" alt="${s.title}" class="w-12 h-12 rounded-full object-cover border ${T.border}" />
+                      </div>
+                      <h3 class="font-serif text-base font-bold ${T.heading}">${s.title}</h3>
+                      <p class="text-xs font-semibold ${T.accentText} mt-0.5">${s.subtitle}</p>
+                      ${!isFocused ? `
+                        <p class="text-xs ${T.bodyMuted} mt-2 leading-relaxed">${s.text}</p>
+                      ` : ""}
+                    </div>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          </section>
+
+          <!-- CONCISE CASE STUDY: 1 main quote + 2 short highlights (expandable) -->
+          <section id="pribeh-klienta" class="py-16 px-4 sm:px-8 ${T.darkSectionBg} text-white">
+            <div class="max-w-6xl mx-auto grid lg:grid-cols-12 gap-10 items-center">
+              <div class="lg:col-span-6 space-y-4">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full ${T.darkBadge} text-xs font-semibold">
+                  Ověřeno v praxi • ${DATA.caseStudy.school} (52 pedagogů)
+                </div>
+                <h2 class="font-serif text-2xl sm:text-3xl font-bold leading-snug">
+                  „Seminář předčil mé očekávání. Oceňuji praktické pojetí a okamžité využití v praxi.“
                 </h2>
-                <blockquote class="${T.darkBody} text-sm sm:text-base leading-relaxed italic">
-                  ${DATA.caseStudy.quote}
-                </blockquote>
-                <div class="flex items-center gap-4 pt-4 border-t border-white/10">
-                  <img src="${DATA.caseStudy.logo}" alt="ZŠ Hlučín Rovniny" class="w-14 h-14 rounded-xl bg-white p-1.5 object-contain" />
+                <div class="flex items-center gap-3 pt-2">
+                  <img src="${DATA.caseStudy.logo}" alt="ZŠ Hlučín Rovniny" class="w-12 h-12 rounded-lg bg-white p-1 object-contain" />
                   <div>
-                    <div class="font-bold text-white">${DATA.caseStudy.author}</div>
+                    <div class="font-bold text-sm text-white">${DATA.caseStudy.author}</div>
                     <div class="text-xs opacity-75">${DATA.caseStudy.role}</div>
                   </div>
                 </div>
               </div>
 
-              <div class="lg:col-span-7">
-                <h3 class="font-serif text-xl font-semibold ${T.darkHighlight} mb-6">
-                  Co si odnesli samotní účastníci (postřehy kolegů ze sborovny):
-                </h3>
-                <div class="grid sm:grid-cols-2 gap-4">
-                  ${DATA.caseStudy.testimonials.map((t) => `
-                    <div class="p-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors flex flex-col justify-between">
-                      <p class="text-sm ${T.darkBody} leading-relaxed">${t.text}</p>
-                      <span class="inline-block mt-4 text-[11px] uppercase tracking-wider font-semibold ${T.darkHighlight}">• ${t.tag}</span>
+              <div class="lg:col-span-6 space-y-3">
+                <div class="text-xs uppercase tracking-wider ${T.darkHighlight} font-semibold">
+                  Z ohlasů účastníků:
+                </div>
+                <div class="grid sm:grid-cols-2 gap-3">
+                  ${visibleQuotes.map((t) => `
+                    <div class="p-4 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between">
+                      <p class="text-xs sm:text-sm ${T.darkBody} leading-relaxed">${t.text}</p>
+                      <span class="inline-block mt-3 text-[11px] font-semibold ${T.darkHighlight}">• ${t.tag}</span>
                     </div>
                   `).join("")}
                 </div>
+                ${isFocused ? `
+                  <button
+                    onclick="PROTO.toggleAShowAllQuotes()"
+                    class="text-xs font-semibold ${T.darkHighlight} hover:underline cursor-pointer pt-1"
+                  >
+                    ${state.aShowAllQuotes
+                      ? "Zobrazit méně ohlasů ↑"
+                      : `Přečíst dalších ${DATA.caseStudy.testimonials.length - 2} ohlasů účastníků ↓`
+                    }
+                  </button>
+                ` : ""}
               </div>
             </div>
-          </div>
-        </section>
 
-        <!-- Team & Founding Story (Consolidates duplicate subpages /magda/ and /lenka/) -->
-        <section id="nas-tym" class="py-20 px-4 sm:px-8 bg-white border-b ${T.border}">
-          <div class="max-w-7xl mx-auto">
-            <div class="max-w-3xl mb-12">
-              <span class="text-xs font-bold uppercase tracking-widest ${T.accentText}">O nás • Náš tým</span>
-              <h2 class="font-serif text-3xl sm:text-4xl font-bold ${T.heading} mt-2">
-                Jsme kreativní parta. Vyznáváme spolehlivost a férovost.
-              </h2>
-              <p class="${T.bodyMuted} mt-2">
-                Spojilo se přátelství, vzájemná úcta, respekt a důvěra. Každá z nás přináší více než desetiletou praxi ve vzdělávání dospělých, managementu a řízení projektů.
-              </p>
-            </div>
-
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              ${DATA.team.map((member) => {
-                const isExpanded = state.aExpandedTeamId === member.id;
-                return `
-                  <div class="rounded-2xl ${T.pageBg} border ${T.border} overflow-hidden flex flex-col justify-between">
-                    <div>
-                      <div class="aspect-[4/4] overflow-hidden bg-black/5 relative">
-                        <img src="${member.photo}" alt="${member.name}" class="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-300" />
-                      </div>
-                      <div class="p-6">
-                        <h3 class="font-serif text-xl font-bold ${T.heading}">${member.name}</h3>
-                        <p class="text-xs font-semibold ${T.accentText} mt-0.5 mb-3">${member.role}</p>
-                        <p class="text-xs sm:text-sm ${T.bodyMuted} leading-relaxed">${member.shortBio}</p>
-                        ${isExpanded ? `
-                          <p class="text-xs sm:text-sm ${T.bodyMuted} leading-relaxed mt-3 pt-3 border-t ${T.border}">
-                            ${member.extendedBio}
-                          </p>
-                        ` : ""}
-                        <button
-                          onclick="PROTO.toggleATeam('${member.id}')"
-                          class="mt-3 text-xs font-bold ${T.accentText} hover:underline cursor-pointer"
-                        >
-                          ${isExpanded ? "Skrýt celý profil ↑" : "Více o mně ↓"}
-                        </button>
-                      </div>
-                    </div>
-                    <div class="px-6 py-4 bg-white border-t ${T.border} text-xs space-y-1">
-                      <a href="tel:${member.phone.replace(/\s+/g, '')}" class="block font-semibold ${T.heading} ${T.accentHoverText}">${member.phone}</a>
-                      <a href="mailto:${member.email}" class="block ${T.subMuted} ${T.accentHoverText} truncate">${member.email}</a>
-                    </div>
-                  </div>
-                `;
-              }).join("")}
-            </div>
-
-            <!-- Founding Story Box -->
-            <div class="mt-12 rounded-3xl ${T.storyBox} border p-8 sm:p-10 grid lg:grid-cols-12 gap-8 items-center">
-              <div class="lg:col-span-4">
-                <img src="${DATA.photos.heroOnas}" alt="Jak jsme se dali dohromady" class="rounded-2xl shadow-md w-full h-56 object-cover" />
+            ${isFocused ? `
+              <div class="max-w-6xl mx-auto mt-10 pt-6 border-t border-white/10 flex justify-end">
+                <button onclick="PROTO.setAView('onas')" class="px-5 py-2 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 text-white cursor-pointer">
+                  Pokračovat na: 3. Náš tým & Reference →
+                </button>
               </div>
-              <div class="lg:col-span-8 space-y-3">
-                <span class="text-xs font-bold uppercase tracking-widest ${T.storyTag}">${DATA.foundingStory.title}</span>
-                <h3 class="font-serif text-2xl font-bold ${T.heading}">${DATA.foundingStory.subtitle}</h3>
-                <p class="font-serif italic text-base sm:text-lg ${T.pageText} leading-relaxed">
-                  ${DATA.foundingStory.quote}
+            ` : ""}
+          </section>
+        ` : ""}
+
+        ${showOnas ? `
+          <!-- COMPACT TEAM: Clean cards, bio on demand -->
+          <section id="nas-tym" class="py-16 px-4 sm:px-8 bg-white border-b ${T.border}">
+            <div class="max-w-6xl mx-auto">
+              <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+                <div>
+                  <span class="text-xs font-bold uppercase tracking-widest ${T.accentText}">Náš tým</span>
+                  <h2 class="font-serif text-2xl sm:text-3xl font-bold ${T.heading} mt-1">
+                    Čtyři lektorky s více než 10 lety praxe
+                  </h2>
+                </div>
+                <p class="text-xs sm:text-sm ${T.bodyMuted} max-w-md">
+                  Spojilo nás přátelství, férovost a chuť dělat vzdělávání jinak.
                 </p>
               </div>
-            </div>
-          </div>
-        </section>
 
-        <!-- Categorized 47 Client Logos -->
-        <section id="reference" class="py-20 px-4 sm:px-8 ${T.pageBg}">
-          <div class="max-w-7xl mx-auto">
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-              <div>
-                <span class="text-xs font-bold uppercase tracking-widest ${T.accentText}">Reference • 47 organizací</span>
-                <h2 class="font-serif text-3xl font-bold ${T.heading} mt-1">Kdo už s námi rostl</h2>
-                <p class="text-sm ${T.bodyMuted} mt-1">Rozděleno přehledně podle sektorů místo nepřehledné zdi 47 log.</p>
-              </div>
-              <div class="flex flex-wrap gap-2">
-                <button onclick="PROTO.setAClientTab('firmy')" class="px-4 py-2 rounded-full text-xs sm:text-sm font-semibold cursor-pointer ${state.aClientTab === 'firmy' ? T.pillActive : 'bg-white ' + T.bodyMuted + ' border ' + T.border}">
-                  Firmy a korporace (${DATA.clients.firmy.length})
-                </button>
-                <button onclick="PROTO.setAClientTab('urady')" class="px-4 py-2 rounded-full text-xs sm:text-sm font-semibold cursor-pointer ${state.aClientTab === 'urady' ? T.pillActive : 'bg-white ' + T.bodyMuted + ' border ' + T.border}">
-                  Veřejná správa a kraje (${DATA.clients.urady.length})
-                </button>
-                <button onclick="PROTO.setAClientTab('skoly')" class="px-4 py-2 rounded-full text-xs sm:text-sm font-semibold cursor-pointer ${state.aClientTab === 'skoly' ? T.pillActive : 'bg-white ' + T.bodyMuted + ' border ' + T.border}">
-                  Školy a gymnázia (${DATA.clients.skoly.length})
-                </button>
+              <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                ${DATA.team.map((member) => {
+                  const isExpanded = state.aExpandedTeamId === member.id;
+                  return `
+                    <div class="rounded-xl ${T.pageBg} border ${T.border} overflow-hidden flex flex-col justify-between">
+                      <div>
+                        <div class="aspect-[4/4] overflow-hidden bg-black/5">
+                          <img src="${member.photo}" alt="${member.name}" class="w-full h-full object-cover object-top" />
+                        </div>
+                        <div class="p-4">
+                          <h3 class="font-serif text-lg font-bold ${T.heading}">${member.name}</h3>
+                          <p class="text-xs font-semibold ${T.accentText} mt-0.5">${member.role}</p>
+                          ${isExpanded || !isFocused ? `
+                            <p class="text-xs ${T.bodyMuted} leading-relaxed mt-2.5 pt-2.5 border-t ${T.border}">
+                              ${member.shortBio}
+                            </p>
+                          ` : ""}
+                          <button
+                            onclick="PROTO.toggleATeam('${member.id}')"
+                            class="mt-2 text-xs font-bold ${T.accentText} hover:underline cursor-pointer"
+                          >
+                            ${isExpanded ? "Skrýt medailonek ↑" : "Krátký medailonek ↓"}
+                          </button>
+                        </div>
+                      </div>
+                      <div class="px-4 py-3 bg-white border-t ${T.border} text-xs flex flex-col gap-0.5">
+                        <a href="tel:${member.phone.replace(/\s+/g, '')}" class="font-semibold ${T.heading} ${T.accentHoverText}">${member.phone}</a>
+                        <a href="mailto:${member.email}" class="${T.subMuted} ${T.accentHoverText} truncate">${member.email}</a>
+                      </div>
+                    </div>
+                  `;
+                }).join("")}
               </div>
             </div>
+          </section>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-              ${currentClients.map((c) => `
-                <div class="bg-white rounded-xl p-4 border ${T.border} flex flex-col items-center justify-center h-28 ${T.hoverBorderAccent} transition-colors group">
-                  <img src="${c.logo}" alt="${c.name}" class="max-h-12 max-w-[130px] object-contain opacity-85 group-hover:opacity-100 transition-opacity" />
-                  <span class="text-[11px] ${T.subMuted} mt-2 text-center font-medium line-clamp-1">${c.name}</span>
+          <!-- COMPACT CLIENT LOGOS: Top 6 per category + Expand button -->
+          <section id="reference" class="py-14 px-4 sm:px-8 ${T.pageBg}">
+            <div class="max-w-6xl mx-auto">
+              <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                <div>
+                  <span class="text-xs font-bold uppercase tracking-widest ${T.accentText}">Reference • 47 organizací</span>
+                  <h2 class="font-serif text-2xl font-bold ${T.heading} mt-1">Kdo už s námi spolupracuje</h2>
                 </div>
-              `).join("")}
-            </div>
-          </div>
-        </section>
+                <div class="flex flex-wrap gap-1.5">
+                  <button onclick="PROTO.setAClientTab('firmy')" class="px-3.5 py-1.5 rounded-full text-xs font-semibold cursor-pointer ${state.aClientTab === 'firmy' ? T.pillActive : 'bg-white ' + T.bodyMuted + ' border ' + T.border}">
+                    Firmy (${DATA.clients.firmy.length})
+                  </button>
+                  <button onclick="PROTO.setAClientTab('urady')" class="px-3.5 py-1.5 rounded-full text-xs font-semibold cursor-pointer ${state.aClientTab === 'urady' ? T.pillActive : 'bg-white ' + T.bodyMuted + ' border ' + T.border}">
+                    Úřady a kraje (${DATA.clients.urady.length})
+                  </button>
+                  <button onclick="PROTO.setAClientTab('skoly')" class="px-3.5 py-1.5 rounded-full text-xs font-semibold cursor-pointer ${state.aClientTab === 'skoly' ? T.pillActive : 'bg-white ' + T.bodyMuted + ' border ' + T.border}">
+                    Školy (${DATA.clients.skoly.length})
+                  </button>
+                </div>
+              </div>
 
-        <!-- Footer & Contacts -->
-        <footer id="kontakty" class="${T.footerBg} ${T.ribbonMuted} py-16 px-4 sm:px-8">
-          <div class="max-w-7xl mx-auto grid md:grid-cols-12 gap-10">
-            <div class="md:col-span-5 space-y-4">
-              <img src="${DATA.brand.logo}" alt="A co dál" class="h-12 w-auto bg-white px-3 py-1.5 rounded-lg" />
-              <h3 class="font-serif text-2xl font-bold text-white">Pojďme společně naplánovat další krok</h3>
-              <p class="text-sm opacity-80 max-w-md">
-                Zavolejte nám nebo napište. Rádi se s vámi potkáme osobně u kávy nebo online a probereme potřeby vašeho týmu či školy.
-              </p>
-              <div class="pt-2 space-y-1 text-sm">
-                <div>Telefon: <a href="tel:+420604392543" class="text-white font-bold hover:underline">${DATA.brand.phone}</a></div>
-                <div>E-mail: <a href="mailto:kontakt@acodal.cz" class="${T.darkHighlight} font-bold hover:underline">${DATA.brand.email}</a></div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                ${visibleClients.map((c) => `
+                  <div class="bg-white rounded-xl p-3 border ${T.border} flex flex-col items-center justify-center h-24 ${T.hoverBorderAccent} transition-colors">
+                    <img src="${c.logo}" alt="${c.name}" class="max-h-10 max-w-[110px] object-contain opacity-85" />
+                    <span class="text-[10px] ${T.subMuted} mt-1.5 text-center font-medium line-clamp-1">${c.name}</span>
+                  </div>
+                `).join("")}
+              </div>
+
+              ${isFocused && currentClients.length > 6 ? `
+                <div class="mt-6 text-center">
+                  <button
+                    onclick="PROTO.toggleAShowAllLogos()"
+                    class="text-xs font-semibold ${T.accentText} hover:underline cursor-pointer"
+                  >
+                    ${state.aShowAllLogos
+                      ? "Zobrazit jen vybraných 6 log ↑"
+                      : `Zobrazit všech ${currentClients.length} organizací v této kategorii ↓`
+                    }
+                  </button>
+                </div>
+              ` : ""}
+            </div>
+          </section>
+        ` : ""}
+
+        <!-- Clean, Lightweight Footer -->
+        <footer id="kontakty" class="${T.footerBg} ${T.ribbonMuted} py-12 px-4 sm:px-8">
+          <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+            <div class="space-y-2">
+              <div class="flex items-center gap-3">
+                <img src="${DATA.brand.logo}" alt="A co dál" class="h-9 w-auto bg-white px-2.5 py-1 rounded-md" />
+                <span class="font-serif text-lg font-bold text-white">Pojďme naplánovat další krok</span>
+              </div>
+              <div class="text-xs sm:text-sm flex flex-wrap gap-x-6 gap-y-1 pt-1">
+                <span>Tel: <a href="tel:+420604392543" class="text-white font-bold hover:underline">${DATA.brand.phone}</a></span>
+                <span>E-mail: <a href="mailto:kontakt@acodal.cz" class="${T.darkHighlight} font-bold hover:underline">${DATA.brand.email}</a></span>
+                <span class="opacity-70">Ostrava & celá ČR</span>
               </div>
             </div>
 
-            <div class="md:col-span-7 grid sm:grid-cols-2 gap-6">
+            <div class="flex flex-wrap gap-6 text-xs opacity-80">
               ${DATA.brand.entities.map((ent) => `
-                <div class="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-xs sm:text-sm">
-                  <div class="font-serif text-base font-bold text-white">${ent.name}</div>
-                  <div><span class="opacity-60">IČ:</span> ${ent.ic}</div>
-                  <div><span class="opacity-60">Sídlo:</span> ${ent.address}</div>
-                  <div><span class="opacity-60">Účet:</span> ${ent.bank}</div>
+                <div>
+                  <strong class="text-white block">${ent.name}</strong>
+                  <span>IČ: ${ent.ic} • ${ent.address}</span>
                 </div>
               `).join("")}
             </div>
@@ -846,7 +1025,7 @@
                   </div>
 
                   <div class="mt-7">
-                    <h4 class="text-xs font-bold uppercase tracking-widest ${T.subMuted} mb-4">Společně s námi v tomto programu:</h4>
+                    <h4 class="text-xs font-bold uppercase tracking-widest ${T.subMuted} mb-4">Co vám program přinese:</h4>
                     <ul class="space-y-3">
                       ${activeTopic.points.map((pt) => `
                         <li class="flex items-start gap-3 text-sm sm:text-base ${T.pageText}">
@@ -878,7 +1057,7 @@
 
               <div class="p-6 sm:p-8 ${T.pageBg} border-t ${T.border} flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="text-xs ${T.bodyMuted}">
-                  Program vždy přizpůsobíme potřebám vašeho týmu (v ČJ, AJ nebo NJ).
+                  Přizpůsobíme na míru vašemu týmu (ČJ, AJ, NJ).
                 </div>
                 <button
                   onclick="PROTO.triggerInquiry('Poptávka kurzu: ${activeTopic.title} (${T.key})')"
@@ -1156,398 +1335,525 @@
   // Structure: 0px border-radius anywhere. Exposed 1px architectural hairlines.
   // ============================================================================
   function renderVariantC() {
+    const isFocused = state.cDensity === "focused";
+    const view = state.cView || "index"; // "index" | "metodika" | "tym"
+
     const brainFilterMeta = {
       all: {
         label: "VŠECH 13 PROGRAMŮ",
-        desc: "Kompletní architektonický přehled všech 13 oblastí vzdělávání a rozvoje. Kliknutím na libovolný řádek rozbalíte sylabus přímo v osnově.",
+        desc: "Kliknutím na řádek rozbalíte sylabus přímo v osnově.",
         accentHex: "#11221C",
         recommendedIds: DATA.topics.map((t) => t.id)
       },
       green: {
         label: "ZELENÁ • KMENOVÝ MOZEK (VZTAHY & EMPATIE)",
-        desc: "Zkušenost, empatie, přirozený kontakt s lidmi, budování důvěry a bezpečné atmosféry v týmu či sborovně.",
+        desc: "Empatie, přirozený kontakt s lidmi, budování důvěry a bezpečné atmosféry v týmu či sborovně.",
         accentHex: "#0F766E",
         recommendedIds: ["structogram", "barevne-uceni", "komunikace", "work-life-balance", "osobni-rozvoj"]
       },
       red: {
         label: "ČERVENÁ • MEZIMOZEK (AKCE & DYNAMIKA)",
-        desc: "Energie, orientace na přítomnost, tah na branku, vedení lidí, přesvědčivá prezentace a zvládání obchodních situací.",
+        desc: "Energie, tah na branku, vedení lidí, přesvědčivá prezentace a obchodní situace.",
         accentHex: "#D13B27",
         recommendedIds: ["structogram", "manazerske-dovednosti", "prodejni-dovednosti", "prezentacni-dovednosti", "choice-of-profession"]
       },
       blue: {
         label: "MODRÁ • KONCOVÝ MOZEK (LOGIKA & STRATEGIE)",
-        desc: "Analýza, logika, struktura, dlouhodobé plánování, kognitivní rezerva, audit procesů a strategická vize školy nebo firmy.",
+        desc: "Analýza, struktura, kognitivní rezerva, audit procesů a strategická vize školy nebo firmy.",
         accentHex: "#1D4ED8",
         recommendedIds: ["structogram", "trenink-pameti", "strategicky-rozvoj-skol", "personalistika", "vyuziti-vlastniho-potencialu"]
       }
     };
 
     const currentBrain = brainFilterMeta[state.cBrainColor] || brainFilterMeta.all;
-    const visibleTopics = state.cBrainColor === "all"
+    const filteredTopics = state.cBrainColor === "all"
       ? DATA.topics
       : DATA.topics.filter((t) => currentBrain.recommendedIds.includes(t.id));
+
+    const visibleTopics = (isFocused && !state.cShowAllCourses && state.cBrainColor === "all")
+      ? filteredTopics.slice(0, 6)
+      : filteredTopics;
+    const hiddenTopicsCount = filteredTopics.length - visibleTopics.length;
+
     const sectorClients = DATA.clients[state.cClientSector] || DATA.clients.firmy;
+    const visibleClients = (isFocused && !state.cShowAllLogos)
+      ? sectorClients.slice(0, 6)
+      : sectorClients;
+
+    const showIndex = !isFocused || view === "index";
+    const showMetodika = !isFocused || view === "metodika";
+    const showTym = !isFocused || view === "tym";
 
     return `
       <div class="min-h-screen bg-[#F3F0EA] text-[#11221C] font-grotesk pb-32 selection:bg-[#D13B27] selection:text-white">
         <!-- Exposed Architectural Top Ledger Bar (Zero rounded corners) -->
         <header class="sticky top-0 z-30 bg-[#F3F0EA]/95 backdrop-blur-md border-b border-[#11221C]">
           <div class="max-w-[1440px] mx-auto grid grid-cols-2 lg:grid-cols-12">
-            <div class="col-span-1 lg:col-span-3 px-5 py-4 border-r border-[#11221C] flex items-center gap-3">
+            <a
+              href="#top"
+              onclick="PROTO.setCView('index'); return false;"
+              class="col-span-1 lg:col-span-3 px-5 py-4 border-r border-[#11221C] flex items-center gap-3 cursor-pointer"
+            >
               <img src="${DATA.brand.logo}" alt="A co dál" class="h-8 w-auto" />
               <span class="font-mono text-[11px] uppercase tracking-widest text-[#11221C]/70 hidden sm:inline">INDEX // OSTRAVA</span>
-            </div>
-            <div class="hidden lg:flex lg:col-span-6 px-6 py-4 border-r border-[#11221C] items-center justify-between font-mono text-xs uppercase tracking-wider">
-              <a href="#c-index" class="hover:text-[#D13B27] transition-colors">01 / REJSTŘÍK TÉMAT (13)</a>
-              <a href="#c-proces" class="hover:text-[#D13B27] transition-colors">02 / METODIKA (5 FÁZÍ)</a>
-              <a href="#c-studie" class="hover:text-[#D13B27] transition-colors">03 / DATA ZE ŠKOL</a>
-              <a href="#c-tym" class="hover:text-[#D13B27] transition-colors">04 / PARTNERKY (4)</a>
-            </div>
+            </a>
+
+            ${isFocused ? `
+              <!-- 3-Sheet Architectural Switcher -->
+              <div class="hidden lg:grid lg:col-span-6 grid-cols-3 border-r border-[#11221C] font-mono text-xs uppercase tracking-wider">
+                ${[
+                  { id: "index", label: "01 / REJSTŘÍK TÉMAT" },
+                  { id: "metodika", label: "02 / METODIKA & DATA" },
+                  { id: "tym", label: "03 / PARTNERKY & KLIENTI" }
+                ].map((tab) => {
+                  const active = view === tab.id;
+                  return `
+                    <button
+                      onclick="PROTO.setCView('${tab.id}')"
+                      class="px-4 py-4 border-r last:border-r-0 border-[#11221C] text-left transition-colors cursor-pointer flex items-center justify-between ${
+                        active ? "bg-[#11221C] text-[#F3F0EA] font-bold" : "hover:bg-[#11221C]/5 text-[#11221C]"
+                      }"
+                    >
+                      <span>${tab.label}</span>
+                      <span class="w-2 h-2 ${active ? "bg-[#D13B27]" : "bg-transparent"}"></span>
+                    </button>
+                  `;
+                }).join("")}
+              </div>
+            ` : `
+              <div class="hidden lg:flex lg:col-span-6 px-6 py-4 border-r border-[#11221C] items-center justify-between font-mono text-xs uppercase tracking-wider">
+                <a href="#c-index" class="hover:text-[#D13B27] transition-colors">01 / REJSTŘÍK (13)</a>
+                <a href="#c-proces" class="hover:text-[#D13B27] transition-colors">02 / METODIKA (5)</a>
+                <a href="#c-studie" class="hover:text-[#D13B27] transition-colors">03 / DATA</a>
+                <a href="#c-tym" class="hover:text-[#D13B27] transition-colors">04 / TÝM (4)</a>
+              </div>
+            `}
+
             <div class="col-span-1 lg:col-span-3 flex items-center justify-between">
-              <div class="px-4 py-4 font-mono text-xs hidden sm:block">CZ · EN · DE</div>
+              <button
+                onclick="PROTO.toggleCDensity()"
+                title="Přepnout mezi stručným 3-listovým rejstříkem a dlouhou stránkou"
+                class="px-3 py-4 font-mono text-[11px] uppercase tracking-wider hover:text-[#D13B27] cursor-pointer truncate"
+              >
+                ${isFocused ? "[ ✨ 3 LISTY ]" : "[ 📜 1 DLOUHÁ ]"}
+              </button>
               <button
                 onclick="PROTO.triggerInquiry('Švýcarský rejstřík — rychlá poptávka')"
-                class="h-full px-6 py-4 bg-[#11221C] hover:bg-[#D13B27] text-[#F3F0EA] font-mono text-xs uppercase tracking-widest transition-colors cursor-pointer ml-auto"
+                class="h-full px-5 py-4 bg-[#11221C] hover:bg-[#D13B27] text-[#F3F0EA] font-mono text-xs uppercase tracking-widest transition-colors cursor-pointer ml-auto shrink-0"
               >
                 KONZULTOVAT →
               </button>
             </div>
           </div>
+
+          ${isFocused ? `
+            <!-- Mobile 3-Sheet Bar -->
+            <div class="grid grid-cols-3 lg:hidden border-t border-[#11221C] font-mono text-[11px] uppercase">
+              <button onclick="PROTO.setCView('index')" class="py-2.5 px-2 border-r border-[#11221C] ${view === 'index' ? 'bg-[#11221C] text-white font-bold' : ''}">01 / Témata</button>
+              <button onclick="PROTO.setCView('metodika')" class="py-2.5 px-2 border-r border-[#11221C] ${view === 'metodika' ? 'bg-[#11221C] text-white font-bold' : ''}">02 / Metodika</button>
+              <button onclick="PROTO.setCView('tym')" class="py-2.5 px-2 ${view === 'tym' ? 'bg-[#11221C] text-white font-bold' : ''}">03 / Tým</button>
+            </div>
+          ` : ""}
         </header>
 
-        <!-- Architectural Split Hero (Exposed 1px Grid Lines, Full-Bleed Image, Oversized Display Typography) -->
-        <section class="border-b border-[#11221C]">
-          <div class="max-w-[1440px] mx-auto grid lg:grid-cols-12">
-            <!-- Left 8 Cols: Monumental Typography -->
-            <div class="lg:col-span-8 p-6 sm:p-12 lg:p-16 lg:border-r border-[#11221C] flex flex-col justify-between">
-              <div>
-                <div class="flex flex-wrap items-center gap-4 font-mono text-xs uppercase tracking-widest text-[#D13B27] pb-6 border-b border-[#11221C]/20">
-                  <span>[ ARCHITEKTURA VZDĚLÁVÁNÍ ]</span>
-                  <span>•</span>
-                  <span>AKREDITACE MŠMT & MPSV</span>
-                  <span>•</span>
-                  <span>EXKLUZIVNĚ STRUCTOGRAM® ČR</span>
-                </div>
-
-                <h1 class="text-4xl sm:text-6xl lg:text-[72px] font-bold tracking-tight leading-[0.98] mt-8 text-[#11221C]">
-                  VĚDA O MOZKU.<br />
-                  LIDSKÝ PŘÍSTUP.<br />
-                  <span class="font-editorial italic font-normal text-[#D13B27]">A co dál?</span>
-                </h1>
-
-                <p class="mt-8 text-lg sm:text-xl text-[#11221C]/80 max-w-2xl leading-relaxed font-sans">
-                  Žádné šablonovité přednášky. Kombinujeme biostrukturální analýzu <strong>Structogram®</strong>, aplikovanou neurovědu, NLP a koučink přímo na pracovišti — pro firmy, sborovny i veřejnou správu.
-                </p>
-              </div>
-
-              <!-- Sharp Architectural KPI Strip (No cards, just vertical 1px dividers) -->
-              <div class="grid grid-cols-3 border-t border-[#11221C] mt-12 pt-8 gap-6">
+        ${showIndex ? `
+          <!-- Compact Architectural Split Hero (Exposed 1px Grid Lines, Crisp & Short) -->
+          <section class="border-b border-[#11221C]">
+            <div class="max-w-[1440px] mx-auto grid lg:grid-cols-12">
+              <!-- Left 8 Cols: Monumental Typography -->
+              <div class="lg:col-span-8 p-6 sm:p-10 lg:p-12 lg:border-r border-[#11221C] flex flex-col justify-between">
                 <div>
-                  <div class="font-mono text-xs uppercase tracking-widest text-[#11221C]/60">KAPITOLY ROZVOJE</div>
-                  <div class="text-4xl sm:text-5xl font-bold mt-1">13</div>
-                  <div class="text-xs font-sans text-[#11221C]/70 mt-1">Ucelených tréninkových systémů</div>
+                  <div class="flex flex-wrap items-center gap-3 font-mono text-xs uppercase tracking-widest text-[#D13B27] pb-4 border-b border-[#11221C]/20">
+                    <span>[ AKREDITACE MŠMT & MPSV ]</span>
+                    <span>•</span>
+                    <span>LICENCE STRUCTOGRAM® ČR</span>
+                    <span>•</span>
+                    <span>ČJ / AJ / NJ</span>
+                  </div>
+
+                  <h1 class="text-4xl sm:text-5xl lg:text-[60px] font-bold tracking-tight leading-[1.0] mt-6 text-[#11221C]">
+                    VĚDA O MOZKU.<br />
+                    PRAXE V TÝMU.<br />
+                    <span class="font-editorial italic font-normal text-[#D13B27]">A co dál?</span>
+                  </h1>
+
+                  <p class="mt-5 text-base sm:text-lg text-[#11221C]/80 max-w-xl leading-relaxed font-sans">
+                    Praktické tréninky pro firmy, sborovny škol a úřady. Kombinujeme biostrukturální analýzu <strong>Structogram®</strong>, neurovědu a koučink přímo na pracovišti.
+                  </p>
                 </div>
-                <div class="border-l border-[#11221C]/30 pl-6">
-                  <div class="font-mono text-xs uppercase tracking-widest text-[#11221C]/60">OVĚŘENO V PRAXI</div>
-                  <div class="text-4xl sm:text-5xl font-bold mt-1">47+</div>
-                  <div class="text-xs font-sans text-[#11221C]/70 mt-1">Korporací, škol a institucí</div>
-                </div>
-                <div class="border-l border-[#11221C]/30 pl-6">
-                  <div class="font-mono text-xs uppercase tracking-widest text-[#D13B27]">OCENĚNÍ</div>
-                  <div class="text-2xl sm:text-3xl font-bold mt-2 leading-tight">Microsoft</div>
-                  <div class="text-xs font-sans text-[#11221C]/70 mt-1">Structogram® zvolen školením roku</div>
-                </div>
-              </div>
-            </div>
 
-            <!-- Right 4 Cols: Full-bleed unboxed photography + Founding Manifesto -->
-            <div class="lg:col-span-4 flex flex-col justify-between bg-[#E6E1D6]">
-              <div class="relative aspect-4/3 lg:aspect-auto lg:h-80 overflow-hidden border-b border-[#11221C]">
-                <img src="${DATA.photos.heroHome}" alt="Seminář A co dál" class="w-full h-full object-cover grayscale contrast-115 hover:grayscale-0 transition-all duration-500" />
-                <div class="absolute bottom-0 left-0 bg-[#11221C] text-[#F3F0EA] px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest">
-                  OBR. 01 // ZÁŽITKOVÝ SEMINÁŘ
-                </div>
-              </div>
-
-              <div class="p-6 sm:p-10 flex-1 flex flex-col justify-between">
-                <div>
-                  <div class="font-mono text-xs uppercase tracking-widest text-[#11221C]/60 mb-3">MANI-FESTO // ZALOŽENO V OSTRAVĚ</div>
-                  <blockquote class="font-editorial italic text-xl leading-snug text-[#11221C]">
-                    ${DATA.foundingStory.quote}
-                  </blockquote>
-                </div>
-                <div class="mt-8 pt-4 border-t border-[#11221C]/30 flex items-center justify-between font-mono text-xs">
-                  <span>4 PARTNERKY & LEKTORKY</span>
-                  <a href="#c-tym" class="underline hover:text-[#D13B27]">POZNAT TÝM ↓</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Structogram Tri-Brain Architectural Filter Bar (Full-bleed sharp colour blocks) -->
-        <section id="c-index" class="border-b border-[#11221C] bg-[#EAE5DA]">
-          <div class="max-w-[1440px] mx-auto">
-            <div class="grid lg:grid-cols-12 border-b border-[#11221C]">
-              <div class="lg:col-span-4 p-6 sm:px-10 sm:py-8 lg:border-r border-[#11221C]">
-                <div class="font-mono text-xs uppercase tracking-widest text-[#D13B27]">FILTR PODLE NEUROVĚDY (STRUCTOGRAM®)</div>
-                <h2 class="text-2xl sm:text-3xl font-bold mt-1">Trojjediný mozek jako klíč k výběru programu</h2>
-              </div>
-              <div class="lg:col-span-8 grid sm:grid-cols-4">
-                ${[
-                  { id: "all", code: "00", title: "Všechna témata", sub: "13 oblastí", activeBg: "bg-[#11221C] text-[#F3F0EA]", dot: "bg-[#F3F0EA]" },
-                  { id: "green", code: "01", title: "Zelená složka", sub: "Kmenový mozek • Vztahy", activeBg: "bg-[#0F766E] text-white", dot: "bg-[#34D399]" },
-                  { id: "red", code: "02", title: "Červená složka", sub: "Mezimozek • Akce & Tah", activeBg: "bg-[#D13B27] text-white", dot: "bg-[#FCA5A5]" },
-                  { id: "blue", code: "03", title: "Modrá složka", sub: "Koncový mozek • Systém", activeBg: "bg-[#1D4ED8] text-white", dot: "bg-[#93C5FD]" }
-                ].map((b) => {
-                  const active = state.cBrainColor === b.id;
-                  return `
-                    <button
-                      onclick="PROTO.setCBrainColor('${b.id}')"
-                      class="p-6 text-left border-t sm:border-t-0 sm:border-r last:border-r-0 border-[#11221C] transition-colors cursor-pointer flex flex-col justify-between ${
-                        active ? b.activeBg : "bg-transparent hover:bg-[#11221C]/5 text-[#11221C]"
-                      }"
-                    >
-                      <div class="flex items-center justify-between w-full font-mono text-xs">
-                        <span>[${b.code}]</span>
-                        <span class="w-2.5 h-2.5 ${active ? b.dot : 'bg-[#11221C]/30'}"></span>
-                      </div>
-                      <div class="mt-6">
-                        <div class="font-bold text-base">${b.title}</div>
-                        <div class="text-xs opacity-80 mt-0.5 font-sans">${b.sub}</div>
-                      </div>
-                    </button>
-                  `;
-                }).join("")}
-              </div>
-            </div>
-
-            <!-- Active Filter Status Strip -->
-            <div class="px-6 sm:px-10 py-4 flex flex-wrap items-center justify-between gap-4 font-mono text-xs bg-[#F3F0EA]">
-              <div>
-                <strong class="uppercase">${currentBrain.label}:</strong>
-                <span class="font-sans text-[#11221C]/80 ml-2">${currentBrain.desc}</span>
-              </div>
-              <div class="shrink-0">ZOBRAZENO: <strong>${visibleTopics.length} / 13</strong></div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Open Typographic Index of 13 Programs (Zero cards, pure horizontal hairlines & inline expansion) -->
-        <section class="border-b border-[#11221C]">
-          <div class="max-w-[1440px] mx-auto divide-y divide-[#11221C]">
-            ${visibleTopics.map((t) => {
-              const isOpen = state.cOpenTopicId === t.id;
-              return `
-                <div class="transition-colors ${isOpen ? 'bg-[#11221C] text-[#F3F0EA]' : 'hover:bg-[#E8E3D9]'}">
-                  <!-- Main Index Row -->
-                  <button
-                    onclick="PROTO.selectCTopic('${t.id}')"
-                    class="w-full text-left px-6 sm:px-10 py-7 grid lg:grid-cols-12 gap-4 items-baseline cursor-pointer"
-                  >
-                    <div class="lg:col-span-1 font-mono text-2xl sm:text-3xl font-bold ${isOpen ? 'text-[#D13B27]' : 'text-[#11221C]/40'}">
-                      ${t.number}
-                    </div>
-                    <div class="lg:col-span-4">
-                      <h3 class="text-2xl sm:text-3xl font-bold tracking-tight">${t.title}</h3>
-                      <div class="font-mono text-[11px] uppercase tracking-widest mt-1 ${isOpen ? 'text-[#F3F0EA]/70' : 'text-[#D13B27]'}">
-                        ${t.pillarLabel}
-                      </div>
-                    </div>
-                    <div class="lg:col-span-5 text-sm sm:text-base font-sans ${isOpen ? 'text-[#F3F0EA]/85' : 'text-[#11221C]/75'}">
-                      ${t.subtitle}
-                    </div>
-                    <div class="lg:col-span-2 flex items-center lg:justify-end gap-4 font-mono text-xs uppercase tracking-widest">
-                      <span>${isOpen ? 'ZAVŘÍT [−]' : 'SYLABUS [+]'}</span>
-                    </div>
-                  </button>
-
-                  <!-- Inline Unboxed Architectural Expansion -->
-                  ${isOpen ? `
-                    <div class="px-6 sm:px-10 pb-10 pt-4 border-t border-[#F3F0EA]/20 grid lg:grid-cols-12 gap-8">
-                      <div class="lg:col-span-5 space-y-4">
-                        <div class="font-mono text-xs uppercase tracking-widest text-[#D13B27]">PARAMETRY PROGRAMU</div>
-                        <div class="text-sm font-sans text-[#F3F0EA]/90 leading-relaxed">
-                          <div><strong>Doporučený formát:</strong> ${t.format}</div>
-                          ${t.accreditation ? `<div class="mt-2 text-amber-300"><strong>Akreditace:</strong> ${t.accreditation}</div>` : ""}
-                          <div class="mt-2"><strong>Jazykové verze:</strong> Čeština, Angličtina, Němčina</div>
-                        </div>
-                        <div class="pt-4">
-                          <button
-                            onclick="PROTO.triggerInquiry('${t.title}')"
-                            class="px-6 py-3.5 bg-[#D13B27] hover:bg-white hover:text-[#11221C] text-white font-mono text-xs uppercase tracking-widest font-bold transition-colors cursor-pointer"
-                          >
-                            POPTAT TENTO PROGRAM →
-                          </button>
-                        </div>
-                      </div>
-
-                      <div class="lg:col-span-7 border-l border-[#F3F0EA]/20 pl-0 lg:pl-8">
-                        <div class="font-mono text-xs uppercase tracking-widest text-[#F3F0EA]/60 mb-4">
-                          CO KONKRÉTNĚ SI ÚČASTNÍCI ODNESOU DO PRAXE (${t.points.length} BODŮ):
-                        </div>
-                        <div class="divide-y divide-[#F3F0EA]/15 border-t border-b border-[#F3F0EA]/15">
-                          ${t.points.map((pt, idx) => `
-                            <div class="py-3 flex items-start gap-4 text-sm sm:text-base font-sans">
-                              <span class="font-mono text-xs text-[#D13B27] mt-1">0${idx + 1}</span>
-                              <span>${pt}</span>
-                            </div>
-                          `).join("")}
-                        </div>
-                      </div>
-                    </div>
-                  ` : ""}
-                </div>
-              `;
-            }).join("")}
-          </div>
-        </section>
-
-        <!-- 5 Steps as an Open Architectural Strip (No rounded cards, sharp 5-column blueprint) -->
-        <section id="c-proces" class="border-b border-[#11221C] bg-[#EAE5DA]">
-          <div class="max-w-[1440px] mx-auto">
-            <div class="px-6 sm:px-10 py-8 border-b border-[#11221C] flex flex-wrap items-baseline justify-between gap-4">
-              <div>
-                <span class="font-mono text-xs uppercase tracking-widest text-[#D13B27]">02 // METODIKA SPOLUPRÁCE</span>
-                <h2 class="text-3xl sm:text-4xl font-bold mt-1">Pět fází od diagnostiky k vyhodnocení</h2>
-              </div>
-              <span class="font-mono text-xs text-[#11221C]/70">5 OBRAZKŮ PROCESU OBNOVENO Z ARCHIVU</span>
-            </div>
-
-            <div class="grid md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-[#11221C]">
-              ${DATA.steps.map((s) => `
-                <div class="p-6 sm:p-8 flex flex-col justify-between bg-[#F3F0EA] hover:bg-white transition-colors">
+                <!-- Sharp Architectural KPI Strip (No cards, just vertical 1px dividers) -->
+                <div class="grid grid-cols-3 border-t border-[#11221C] mt-8 pt-6 gap-4">
                   <div>
-                    <div class="flex items-center justify-between font-mono text-xs text-[#D13B27] pb-4 border-b border-[#11221C]/20">
-                      <span>FÁZE 0${s.step}</span>
-                      <span>//</span>
-                    </div>
-                    <div class="my-5 flex items-center gap-4">
-                      <img src="${s.image}" alt="${s.title}" class="w-14 h-14 object-cover grayscale contrast-125 border border-[#11221C]" />
-                      <div>
-                        <h3 class="font-bold text-lg leading-tight">${s.title}</h3>
-                        <div class="font-mono text-[11px] text-[#11221C]/60 mt-0.5">${s.subtitle}</div>
-                      </div>
-                    </div>
-                    <p class="text-sm font-sans text-[#11221C]/80 leading-relaxed">${s.text}</p>
+                    <div class="font-mono text-[11px] uppercase tracking-widest text-[#11221C]/60">OBLASTI</div>
+                    <div class="text-3xl sm:text-4xl font-bold mt-0.5">13</div>
+                  </div>
+                  <div class="border-l border-[#11221C]/30 pl-4">
+                    <div class="font-mono text-[11px] uppercase tracking-widest text-[#11221C]/60">KLIENTI</div>
+                    <div class="text-3xl sm:text-4xl font-bold mt-0.5">47+</div>
+                  </div>
+                  <div class="border-l border-[#11221C]/30 pl-4">
+                    <div class="font-mono text-[11px] uppercase tracking-widest text-[#D13B27]">GARANCE</div>
+                    <div class="text-2xl sm:text-3xl font-bold mt-1 leading-tight">4 lektorky</div>
                   </div>
                 </div>
-              `).join("")}
-            </div>
-          </div>
-        </section>
-
-        <!-- Full-Bleed Deep Forest Band: ZŠ Hlučín Case Study (No cards — open typographic columns) -->
-        <section id="c-studie" class="bg-[#11221C] text-[#F3F0EA] border-b border-[#11221C]">
-          <div class="max-w-[1440px] mx-auto grid lg:grid-cols-12">
-            <div class="lg:col-span-5 p-8 sm:p-12 lg:p-16 lg:border-r border-[#F3F0EA]/20 flex flex-col justify-between">
-              <div>
-                <div class="font-mono text-xs uppercase tracking-widest text-[#D13B27]">03 // PŘÍPADOVÁ STUDIE & DATA</div>
-                <h2 class="text-3xl sm:text-5xl font-bold mt-3 leading-tight">${DATA.caseStudy.school}</h2>
-                <p class="font-sans text-base text-[#F3F0EA]/80 mt-4 leading-relaxed">
-                  ${DATA.caseStudy.summary}
-                </p>
               </div>
 
-              <div class="mt-10 pt-8 border-t border-[#F3F0EA]/20 grid grid-cols-2 gap-6">
-                <div>
-                  <div class="text-5xl font-bold text-[#D13B27]">52</div>
-                  <div class="font-mono text-xs uppercase tracking-wider text-[#F3F0EA]/70 mt-1">Pedagogických pracovníků</div>
+              <!-- Right 4 Cols: Full-bleed unboxed photography -->
+              <div class="lg:col-span-4 flex flex-col justify-between bg-[#E6E1D6]">
+                <div class="relative aspect-4/3 lg:aspect-auto lg:flex-1 overflow-hidden border-b border-[#11221C]">
+                  <img src="${DATA.photos.heroHome}" alt="Seminář A co dál" class="w-full h-full object-cover grayscale contrast-115 hover:grayscale-0 transition-all duration-500" />
+                  <div class="absolute bottom-0 left-0 bg-[#11221C] text-[#F3F0EA] px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest">
+                    OBR. 01 // LEKTORSKÝ TÝM OSTRAVA
+                  </div>
                 </div>
-                <div>
-                  <div class="text-5xl font-bold text-[#F3F0EA]">1,08</div>
-                  <div class="font-mono text-xs uppercase tracking-wider text-[#F3F0EA]/70 mt-1">Průměrná známka přínosu</div>
+                <div class="px-6 py-4 flex items-center justify-between font-mono text-xs">
+                  <span>ZALOŽENO V OSTRAVĚ</span>
+                  <button onclick="PROTO.setCView('tym')" class="underline hover:text-[#D13B27] cursor-pointer">POZNAT 4 PARTNERKY →</button>
                 </div>
               </div>
             </div>
+          </section>
 
-            <div class="lg:col-span-7 p-8 sm:p-12 lg:p-16 flex flex-col justify-between">
-              <div class="font-mono text-xs uppercase tracking-widest text-[#F3F0EA]/60 mb-6">
-                DOSLOVNÉ CITACE ÚČASTNÍKŮ (BEZ CENZURY A BEZ RÁMEČKŮ):
+          <!-- Structogram Tri-Brain Architectural Filter Bar -->
+          <section id="c-index" class="border-b border-[#11221C] bg-[#EAE5DA]">
+            <div class="max-w-[1440px] mx-auto">
+              <div class="grid lg:grid-cols-12 border-b border-[#11221C]">
+                <div class="lg:col-span-4 p-5 sm:px-8 sm:py-6 lg:border-r border-[#11221C] flex flex-col justify-center">
+                  <div class="font-mono text-[11px] uppercase tracking-widest text-[#D13B27]">01 // REJSTŘÍK PROGRAMŮ</div>
+                  <h2 class="text-xl sm:text-2xl font-bold mt-1">Filtr podle složky mozku (Structogram®)</h2>
+                </div>
+                <div class="lg:col-span-8 grid sm:grid-cols-4">
+                  ${[
+                    { id: "all", code: "00", title: "Všechna témata", sub: "13 oblastí", activeBg: "bg-[#11221C] text-[#F3F0EA]", dot: "bg-[#F3F0EA]" },
+                    { id: "green", code: "01", title: "Zelená složka", sub: "Vztahy & Empatie", activeBg: "bg-[#0F766E] text-white", dot: "bg-[#34D399]" },
+                    { id: "red", code: "02", title: "Červená složka", sub: "Akce & Vedení", activeBg: "bg-[#D13B27] text-white", dot: "bg-[#FCA5A5]" },
+                    { id: "blue", code: "03", title: "Modrá složka", sub: "Systém & Paměť", activeBg: "bg-[#1D4ED8] text-white", dot: "bg-[#93C5FD]" }
+                  ].map((b) => {
+                    const active = state.cBrainColor === b.id;
+                    return `
+                      <button
+                        onclick="PROTO.setCBrainColor('${b.id}')"
+                        class="p-5 text-left border-t sm:border-t-0 sm:border-r last:border-r-0 border-[#11221C] transition-colors cursor-pointer flex flex-col justify-between ${
+                          active ? b.activeBg : "bg-transparent hover:bg-[#11221C]/5 text-[#11221C]"
+                        }"
+                      >
+                        <div class="flex items-center justify-between w-full font-mono text-xs">
+                          <span>[${b.code}]</span>
+                          <span class="w-2.5 h-2.5 ${active ? b.dot : 'bg-[#11221C]/30'}"></span>
+                        </div>
+                        <div class="mt-4">
+                          <div class="font-bold text-sm sm:text-base">${b.title}</div>
+                          <div class="text-xs opacity-80 mt-0.5 font-sans">${b.sub}</div>
+                        </div>
+                      </button>
+                    `;
+                  }).join("")}
+                </div>
               </div>
-              <div class="divide-y divide-[#F3F0EA]/20 border-t border-b border-[#F3F0EA]/20">
-                ${DATA.caseStudy.testimonials.slice(0, 4).map((q) => `
-                  <div class="py-5 grid sm:grid-cols-12 gap-4 items-baseline">
-                    <div class="sm:col-span-8 font-editorial italic text-lg sm:text-xl text-white">
-                      „${q.quote}“
-                    </div>
-                    <div class="sm:col-span-4 font-mono text-xs text-[#F3F0EA]/60 sm:text-right">
-                      — ${q.author}
+
+              <!-- Active Filter Status Strip -->
+              <div class="px-6 sm:px-8 py-3 flex flex-wrap items-center justify-between gap-4 font-mono text-xs bg-[#F3F0EA]">
+                <div>
+                  <strong class="uppercase">${currentBrain.label}:</strong>
+                  <span class="font-sans text-[#11221C]/80 ml-2">${currentBrain.desc}</span>
+                </div>
+                <div class="shrink-0">ZOBRAZENO: <strong>${visibleTopics.length} / ${filteredTopics.length}</strong></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Open Typographic Index of Programs (Zero cards, pure horizontal hairlines & inline expansion) -->
+          <section class="border-b border-[#11221C]">
+            <div class="max-w-[1440px] mx-auto divide-y divide-[#11221C]">
+              ${visibleTopics.map((t) => {
+                const isOpen = state.cOpenTopicId === t.id;
+                return `
+                  <div class="transition-colors ${isOpen ? 'bg-[#11221C] text-[#F3F0EA]' : 'hover:bg-[#E8E3D9]'}">
+                    <!-- Main Index Row -->
+                    <button
+                      onclick="PROTO.selectCTopic('${t.id}')"
+                      class="w-full text-left px-6 sm:px-8 py-5 grid lg:grid-cols-12 gap-3 items-baseline cursor-pointer"
+                    >
+                      <div class="lg:col-span-1 font-mono text-xl sm:text-2xl font-bold ${isOpen ? 'text-[#D13B27]' : 'text-[#11221C]/40'}">
+                        ${t.number}
+                      </div>
+                      <div class="lg:col-span-4">
+                        <h3 class="text-xl sm:text-2xl font-bold tracking-tight">${t.title}</h3>
+                        <div class="font-mono text-[10px] uppercase tracking-widest mt-0.5 ${isOpen ? 'text-[#F3F0EA]/70' : 'text-[#D13B27]'}">
+                          ${t.pillarLabel}
+                        </div>
+                      </div>
+                      <div class="lg:col-span-5 text-sm font-sans line-clamp-1 ${isOpen ? 'text-[#F3F0EA]/85' : 'text-[#11221C]/75'}">
+                        ${t.subtitle}
+                      </div>
+                      <div class="lg:col-span-2 flex items-center lg:justify-end gap-4 font-mono text-xs uppercase tracking-widest">
+                        <span>${isOpen ? 'ZAVŘÍT [−]' : 'SYLABUS [+]'}</span>
+                      </div>
+                    </button>
+
+                    <!-- Inline Unboxed Architectural Expansion -->
+                    ${isOpen ? `
+                      <div class="px-6 sm:px-8 pb-8 pt-4 border-t border-[#F3F0EA]/20 grid lg:grid-cols-12 gap-8">
+                        <div class="lg:col-span-4 space-y-3">
+                          <div class="font-mono text-xs uppercase tracking-widest text-[#D13B27]">PARAMETRY PROGRAMU</div>
+                          <div class="text-xs sm:text-sm font-sans text-[#F3F0EA]/90 leading-relaxed space-y-1">
+                            <div><strong>Formát:</strong> ${t.format}</div>
+                            ${t.accreditation ? `<div class="text-amber-300"><strong>Akreditace:</strong> ${t.accreditation}</div>` : ""}
+                            <div><strong>Jazyk:</strong> ČJ / AJ / NJ</div>
+                          </div>
+                          <div class="pt-3">
+                            <button
+                              onclick="PROTO.triggerInquiry('${t.title}')"
+                              class="px-5 py-3 bg-[#D13B27] hover:bg-white hover:text-[#11221C] text-white font-mono text-xs uppercase tracking-widest font-bold transition-colors cursor-pointer"
+                            >
+                              POPTAT TENTO PROGRAM →
+                            </button>
+                          </div>
+                        </div>
+
+                        <div class="lg:col-span-8 border-l border-[#F3F0EA]/20 pl-0 lg:pl-8">
+                          <div class="font-mono text-xs uppercase tracking-widest text-[#F3F0EA]/60 mb-3">
+                            PŘÍNOSY PRO TÝM (${t.points.length} BODŮ):
+                          </div>
+                          <div class="divide-y divide-[#F3F0EA]/15 border-t border-b border-[#F3F0EA]/15">
+                            ${t.points.map((pt, idx) => `
+                              <div class="py-2.5 flex items-start gap-4 text-sm font-sans">
+                                <span class="font-mono text-xs text-[#D13B27] mt-0.5">0${idx + 1}</span>
+                                <span>${pt}</span>
+                              </div>
+                            `).join("")}
+                          </div>
+                        </div>
+                      </div>
+                    ` : ""}
+                  </div>
+                `;
+              }).join("")}
+            </div>
+
+            ${isFocused && state.cBrainColor === "all" ? `
+              <div class="max-w-[1440px] mx-auto border-t border-[#11221C] bg-[#EAE5DA] px-6 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-4">
+                <button
+                  onclick="PROTO.toggleCShowAllCourses()"
+                  class="font-mono text-xs uppercase tracking-widest font-bold text-[#11221C] hover:text-[#D13B27] cursor-pointer"
+                >
+                  ${state.cShowAllCourses
+                    ? "[ − ZOBRAZIT JEN 6 STĚŽEJNÍCH PROGRAMŮ ↑ ]"
+                    : `[ + ROZBALIT VŠECH 13 PROGRAMŮ (+${hiddenTopicsCount} DALŠÍCH) ↓ ]`
+                  }
+                </button>
+                <button
+                  onclick="PROTO.setCView('metodika')"
+                  class="font-mono text-xs uppercase tracking-widest bg-[#11221C] text-[#F3F0EA] px-4 py-2 hover:bg-[#D13B27] transition-colors cursor-pointer"
+                >
+                  POKRAČOVAT NA: 02 / METODIKA & DATA →
+                </button>
+              </div>
+            ` : ""}
+          </section>
+        ` : ""}
+
+        ${showMetodika ? `
+          <!-- 5 Steps as an Open Architectural Strip (Concise titles & subtitles in Focused Mode) -->
+          <section id="c-proces" class="border-b border-[#11221C] bg-[#EAE5DA]">
+            <div class="max-w-[1440px] mx-auto">
+              <div class="px-6 sm:px-8 py-6 border-b border-[#11221C] flex flex-wrap items-baseline justify-between gap-4">
+                <div>
+                  <span class="font-mono text-xs uppercase tracking-widest text-[#D13B27]">02 // METODIKA SPOLUPRÁCE</span>
+                  <h2 class="text-2xl sm:text-3xl font-bold mt-1">Pět fází od diagnostiky po vyhodnocení</h2>
+                </div>
+                <span class="font-mono text-xs text-[#11221C]/70">VÝCVIK NA PRACOVIŠTI • SEMINÁŘ • KOUČINK</span>
+              </div>
+
+              <div class="grid md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-[#11221C]">
+                ${DATA.steps.map((s) => `
+                  <div class="p-6 flex flex-col justify-between bg-[#F3F0EA] hover:bg-white transition-colors">
+                    <div>
+                      <div class="flex items-center justify-between font-mono text-xs text-[#D13B27] pb-3 border-b border-[#11221C]/20">
+                        <span>FÁZE 0${s.step}</span>
+                        <span>//</span>
+                      </div>
+                      <div class="mt-4 flex items-center gap-3.5">
+                        <img src="${s.image}" alt="${s.title}" class="w-12 h-12 object-cover grayscale contrast-125 border border-[#11221C]" />
+                        <div>
+                          <h3 class="font-bold text-base leading-tight">${s.title}</h3>
+                          <div class="font-mono text-[11px] text-[#11221C]/65 mt-0.5">${s.subtitle}</div>
+                        </div>
+                      </div>
+                      ${!isFocused ? `
+                        <p class="text-xs font-sans text-[#11221C]/80 leading-relaxed mt-3">${s.text}</p>
+                      ` : ""}
                     </div>
                   </div>
                 `).join("")}
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- 4 Partners Architectural Portrait Columns + Sector Reference Ledger -->
-        <section id="c-tym" class="border-b border-[#11221C]">
-          <div class="max-w-[1440px] mx-auto">
-            <div class="px-6 sm:px-10 py-8 border-b border-[#11221C] flex flex-wrap items-baseline justify-between gap-4">
-              <div>
-                <span class="font-mono text-xs uppercase tracking-widest text-[#D13B27]">04 // VEDENÍ & LEKTORKY</span>
-                <h2 class="text-3xl sm:text-4xl font-bold mt-1">Čtyři ženy, které stojí za A CO DÁL</h2>
+          <!-- Full-Bleed Deep Forest Band: ZŠ Hlučín Case Study (Concise 2 quotes in Focused Mode) -->
+          <section id="c-studie" class="bg-[#11221C] text-[#F3F0EA] border-b border-[#11221C]">
+            <div class="max-w-[1440px] mx-auto grid lg:grid-cols-12">
+              <div class="lg:col-span-5 p-8 sm:p-10 lg:border-r border-[#F3F0EA]/20 flex flex-col justify-between">
+                <div>
+                  <div class="font-mono text-xs uppercase tracking-widest text-[#D13B27]">03 // PŘÍPADOVÁ STUDIE</div>
+                  <h2 class="text-2xl sm:text-4xl font-bold mt-2 leading-tight">${DATA.caseStudy.school}</h2>
+                  <p class="font-editorial italic text-lg text-[#F3F0EA]/90 mt-3 leading-relaxed">
+                    „Seminář předčil mé očekávání. Oceňuji praktické pojetí a okamžité využití v praxi.“
+                  </p>
+                  <div class="font-mono text-xs text-[#F3F0EA]/60 mt-2">— ${DATA.caseStudy.author}, ${DATA.caseStudy.role}</div>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-[#F3F0EA]/20 grid grid-cols-2 gap-6">
+                  <div>
+                    <div class="text-4xl font-bold text-[#D13B27]">52</div>
+                    <div class="font-mono text-[11px] uppercase tracking-wider text-[#F3F0EA]/70 mt-1">Pedagogů v týmu</div>
+                  </div>
+                  <div>
+                    <div class="text-4xl font-bold text-[#F3F0EA]">1,08</div>
+                    <div class="font-mono text-[11px] uppercase tracking-wider text-[#F3F0EA]/70 mt-1">Hodnocení přínosu</div>
+                  </div>
+                </div>
               </div>
-              <span class="font-mono text-xs">PŘÍMÉ KONTAKTY BEZ RECEPCE</span>
+
+              <div class="lg:col-span-7 p-8 sm:p-10 flex flex-col justify-between">
+                <div>
+                  <div class="font-mono text-xs uppercase tracking-widest text-[#F3F0EA]/60 mb-4">
+                    VYBRANÉ OHLASY ÚČASTNÍKŮ:
+                  </div>
+                  <div class="divide-y divide-[#F3F0EA]/20 border-t border-b border-[#F3F0EA]/20">
+                    ${DATA.caseStudy.testimonials.slice(0, isFocused ? 2 : 4).map((q) => `
+                      <div class="py-4 grid sm:grid-cols-12 gap-3 items-baseline">
+                        <div class="sm:col-span-8 font-editorial italic text-base sm:text-lg text-white">
+                          ${q.text}
+                        </div>
+                        <div class="sm:col-span-4 font-mono text-xs text-[#D13B27] sm:text-right">
+                          [ ${q.tag} ]
+                        </div>
+                      </div>
+                    `).join("")}
+                  </div>
+                </div>
+
+                ${isFocused ? `
+                  <div class="mt-6 flex justify-end">
+                    <button
+                      onclick="PROTO.setCView('tym')"
+                      class="font-mono text-xs uppercase tracking-widest bg-[#D13B27] text-white px-5 py-2.5 hover:bg-white hover:text-[#11221C] transition-colors cursor-pointer"
+                    >
+                      POKRAČOVAT NA: 03 / PARTNERKY & KLIENTI →
+                    </button>
+                  </div>
+                ` : ""}
+              </div>
+            </div>
+          </section>
+        ` : ""}
+
+        ${showTym ? `
+          <!-- 4 Partners Architectural Portrait Columns (Bio on Demand in Focused Mode) -->
+          <section id="c-tym" class="border-b border-[#11221C]">
+            <div class="max-w-[1440px] mx-auto">
+              <div class="px-6 sm:px-8 py-6 border-b border-[#11221C] flex flex-wrap items-baseline justify-between gap-4">
+                <div>
+                  <span class="font-mono text-xs uppercase tracking-widest text-[#D13B27]">04 // VEDENÍ & LEKTORKY</span>
+                  <h2 class="text-2xl sm:text-3xl font-bold mt-1">Čtyři partnerky A CO DÁL</h2>
+                </div>
+                <span class="font-mono text-xs">PŘÍMÉ KONTAKTY BEZ RECEPCE</span>
+              </div>
+
+              <div class="grid sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#11221C]">
+                ${DATA.team.map((m, idx) => {
+                  const isExpanded = state.cExpandedTeamId === m.id;
+                  return `
+                    <div class="flex flex-col justify-between">
+                      <div>
+                        <div class="aspect-4/4 overflow-hidden border-b border-[#11221C] bg-[#E6E1D6]">
+                          <img src="${m.photo}" alt="${m.name}" class="w-full h-full object-cover object-top" />
+                        </div>
+                        <div class="p-5">
+                          <div class="font-mono text-[11px] text-[#D13B27]">PARTNERKA 0${idx + 1}</div>
+                          <h3 class="text-xl font-bold mt-0.5">${m.name}</h3>
+                          <div class="text-xs font-mono text-[#11221C]/70 mt-0.5">${m.role}</div>
+                          ${isExpanded || !isFocused ? `
+                            <p class="text-xs sm:text-sm font-sans text-[#11221C]/80 mt-3 pt-3 border-t border-[#11221C]/20 leading-relaxed">${m.shortBio}</p>
+                          ` : ""}
+                          <button
+                            onclick="PROTO.toggleCTeam('${m.id}')"
+                            class="mt-2 font-mono text-[11px] uppercase tracking-wider text-[#D13B27] hover:underline cursor-pointer"
+                          >
+                            ${isExpanded ? "[ − SKRÝT PROFIL ]" : "[ + PROFIL LEKTORKY ]"}
+                          </button>
+                        </div>
+                      </div>
+                      <div class="p-5 pt-3 border-t border-[#11221C]/20 font-mono text-xs space-y-1 bg-white/50">
+                        <a href="tel:${m.phone.replace(/\s+/g, '')}" class="block font-bold hover:text-[#D13B27]">${m.phone}</a>
+                        <a href="mailto:${m.email}" class="block text-[#11221C]/70 hover:underline truncate">${m.email}</a>
+                      </div>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            </div>
+          </section>
+
+          <!-- Client Logo Ledger (Top 6 in Focused Mode + Expand Button) -->
+          <section class="max-w-[1440px] mx-auto px-6 sm:px-8 py-10 border-b border-[#11221C]">
+            <div class="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-[#11221C]">
+              <div class="font-mono text-xs uppercase tracking-widest">
+                05 // VYBRANÉ REFERENCE (47 ORGANIZACÍ)
+              </div>
+              <div class="flex gap-6 font-mono text-xs uppercase">
+                ${[
+                  { id: "firmy", label: `FIRMY (${DATA.clients.firmy.length})` },
+                  { id: "urady", label: `ÚŘADY (${DATA.clients.urady.length})` },
+                  { id: "skoly", label: `ŠKOLY (${DATA.clients.skoly.length})` }
+                ].map((tab) => `
+                  <button
+                    onclick="PROTO.setCClientSector('${tab.id}')"
+                    class="pb-1 cursor-pointer ${state.cClientSector === tab.id ? 'border-b-2 border-[#D13B27] font-bold text-[#D13B27]' : 'text-[#11221C]/60 hover:text-[#11221C]'}"
+                  >
+                    ${tab.label}
+                  </button>
+                `).join("")}
+              </div>
             </div>
 
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#11221C]">
-              ${DATA.team.map((m, idx) => `
-                <div class="flex flex-col justify-between">
-                  <div>
-                    <div class="aspect-4/4 overflow-hidden border-b border-[#11221C] bg-[#E6E1D6]">
-                      <img src="${m.photo}" alt="${m.name}" class="w-full h-full object-cover object-top" />
-                    </div>
-                    <div class="p-6">
-                      <div class="font-mono text-xs text-[#D13B27]">PARTNERKA 0${idx + 1}</div>
-                      <h3 class="text-xl font-bold mt-1">${m.name}</h3>
-                      <div class="text-xs font-mono text-[#11221C]/70 mt-0.5">${m.role}</div>
-                      <p class="text-sm font-sans text-[#11221C]/80 mt-4 leading-relaxed">${m.shortBio}</p>
-                    </div>
-                  </div>
-                  <div class="p-6 pt-4 border-t border-[#11221C]/20 font-mono text-xs space-y-1">
-                    <a href="tel:${m.phone.replace(/\s+/g, '')}" class="block font-bold hover:text-[#D13B27]">${m.phone}</a>
-                    <a href="mailto:${m.email}" class="block text-[#11221C]/70 hover:underline">${m.email}</a>
-                  </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-y-6 gap-x-6 py-6 items-center">
+              ${visibleClients.map((c) => `
+                <div class="flex flex-col items-center text-center group">
+                  <img src="${c.logo}" alt="${c.name}" class="h-10 max-w-[110px] object-contain grayscale opacity-75 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                  <span class="font-mono text-[10px] text-[#11221C]/60 mt-1.5 line-clamp-1">${c.name}</span>
                 </div>
               `).join("")}
             </div>
-          </div>
-        </section>
 
-        <!-- Client Logo Ledger (No individual boxes — clean typographic & logo strip) -->
-        <section class="max-w-[1440px] mx-auto px-6 sm:px-10 py-12">
-          <div class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[#11221C]">
-            <div class="font-mono text-xs uppercase tracking-widest">
-              05 // VYBRANÉ REFERENCE (47 ORGANIZACÍ)
-            </div>
-            <div class="flex gap-6 font-mono text-xs uppercase">
-              ${[
-                { id: "firmy", label: "FIRMY (22)" },
-                { id: "urady", label: "ÚŘADY (12)" },
-                { id: "skoly", label: "ŠKOLY (13)" }
-              ].map((tab) => `
+            ${isFocused && sectorClients.length > 6 ? `
+              <div class="pt-2 text-center">
                 <button
-                  onclick="PROTO.setCClientSector('${tab.id}')"
-                  class="pb-1 cursor-pointer ${state.cClientSector === tab.id ? 'border-b-2 border-[#D13B27] font-bold text-[#D13B27]' : 'text-[#11221C]/60 hover:text-[#11221C]'}"
+                  onclick="PROTO.toggleCShowAllLogos()"
+                  class="font-mono text-xs uppercase tracking-widest text-[#D13B27] hover:underline cursor-pointer"
                 >
-                  ${tab.label}
+                  ${state.cShowAllLogos
+                    ? "[ − ZOBRAZIT JEN 6 VYBRANÝCH LOG ↑ ]"
+                    : `[ + ZOBRAZIT VŠECH ${sectorClients.length} ORGANIZACÍ V SEKTORU ↓ ]`
+                  }
                 </button>
-              `).join("")}
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-y-8 gap-x-6 py-8 items-center">
-            ${sectorClients.map((c) => `
-              <div class="flex flex-col items-center text-center group">
-                <img src="${c.logo}" alt="${c.name}" class="h-10 max-w-[120px] object-contain grayscale opacity-75 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
-                <span class="font-mono text-[10px] text-[#11221C]/60 mt-2">${c.name}</span>
               </div>
-            `).join("")}
+            ` : ""}
+          </section>
+        ` : ""}
+
+        <!-- Minimal Architectural Footer Band -->
+        <footer class="max-w-[1440px] mx-auto px-6 sm:px-8 py-8 flex flex-wrap items-center justify-between gap-4 font-mono text-xs text-[#11221C]/70">
+          <div>
+            <strong class="text-[#11221C]">A CO DÁL, s.r.o.</strong> (IČ: 01771264) • <strong class="text-[#11221C]">A co dál – centrum rozvoje, z.ú.</strong> (IČ: 09557181)
           </div>
-        </section>
+          <div class="flex gap-6">
+            <a href="tel:+420604392543" class="text-[#11221C] font-bold hover:text-[#D13B27]">${DATA.brand.phone}</a>
+            <a href="mailto:kontakt@acodal.cz" class="text-[#D13B27] font-bold hover:underline">${DATA.brand.email}</a>
+          </div>
+        </footer>
       </div>
     `;
   }
@@ -1835,244 +2141,368 @@
   //            spreads, drop-caps, Roman numerals, unboxed photos, flowing prose.
   // ============================================================================
   function renderVariantE() {
+    const isFocused = state.eDensity === "focused";
+    const view = state.eView || "programy"; // "programy" | "cesta" | "autorky"
+
     const filteredTopics = state.ePillar === "all"
       ? DATA.topics
       : DATA.topics.filter((t) => t.pillar === state.ePillar);
+
+    const visibleTopics = (isFocused && !state.eShowAllCourses && state.ePillar === "all")
+      ? filteredTopics.slice(0, 6)
+      : filteredTopics;
+    const hiddenTopicsCount = filteredTopics.length - visibleTopics.length;
+
     const activeStepObj = DATA.steps.find((s) => s.step === state.eActiveStep) || DATA.steps[0];
+
+    const showProgramy = !isFocused || view === "programy";
+    const showCesta = !isFocused || view === "cesta";
+    const showAutorky = !isFocused || view === "autorky";
 
     return `
       <div class="min-h-screen bg-[#F6F3EC] text-[#142822] font-sans pb-32 selection:bg-[#142822] selection:text-[#F6F3EC]">
         <!-- Print Magazine Masthead -->
-        <header class="max-w-6xl mx-auto px-6 sm:px-12 pt-10 pb-6 border-b-2 border-[#142822]">
-          <div class="flex flex-wrap items-center justify-between gap-4 text-xs font-mono uppercase tracking-widest text-[#6B7D73] pb-4 border-b border-[#142822]/15">
+        <header class="max-w-6xl mx-auto px-6 sm:px-12 pt-8 pb-5 border-b-2 border-[#142822]">
+          <div class="flex flex-wrap items-center justify-between gap-4 text-[11px] font-mono uppercase tracking-widest text-[#6B7D73] pb-3 border-b border-[#142822]/15">
             <span>VYDÁNÍ 2025 // OSTRAVA, ČESKÁ REPUBLIKA</span>
-            <span>APLIKOVANÁ NEUROVĚDA • STRUCTOGRAM® • KOUČINK</span>
-            <span>ČESKY / ENGLISH / DEUTSCH</span>
+            <span class="hidden md:inline">APLIKOVANÁ NEUROVĚDA • STRUCTOGRAM® • KOUČINK</span>
+            <button
+              onclick="PROTO.toggleEDensity()"
+              class="text-[#C85232] font-bold hover:underline cursor-pointer"
+            >
+              ${isFocused ? "✨ REŽIM: 3 ČASOPISECKÉ DVOJSTRANY" : "📜 REŽIM: CELÉ ČÍSLO POD SEBOU"}
+            </button>
           </div>
 
-          <div class="py-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div class="flex items-center gap-5">
-              <img src="${DATA.brand.logo}" alt="A co dál" class="h-12 w-auto" />
+          <div class="pt-5 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <a href="#top" onclick="PROTO.setEView('programy'); return false;" class="flex items-center gap-4 cursor-pointer">
+              <img src="${DATA.brand.logo}" alt="A co dál" class="h-11 w-auto" />
               <div>
-                <div class="font-editorial text-3xl sm:text-5xl tracking-tight text-[#142822]">A CO DÁL</div>
-                <div class="text-xs font-mono uppercase tracking-widest text-[#C85232] mt-1">Rozvoj lidí, firem a škol s respektem k mozku</div>
+                <div class="font-editorial text-3xl sm:text-4xl tracking-tight text-[#142822]">A CO DÁL</div>
+                <div class="text-[11px] font-mono uppercase tracking-widest text-[#C85232] mt-0.5">Rozvoj lidí, firem a škol s respektem k mozku</div>
               </div>
-            </div>
-            <nav class="flex flex-wrap gap-6 text-sm font-editorial italic text-[#142822]">
-              <a href="#e-uvodnik" class="hover:text-[#C85232]">I. Úvodník</a>
-              <a href="#e-rejstrik" class="hover:text-[#C85232]">II. Kapitoly rozvoje (13)</a>
-              <a href="#e-cesta" class="hover:text-[#C85232]">III. Pět zastavení</a>
-              <a href="#e-studie" class="hover:text-[#C85232]">IV. Reportáž ze sborovny</a>
-              <a href="#e-autorky" class="hover:text-[#C85232]">V. Autorky</a>
-            </nav>
+            </a>
+
+            ${isFocused ? `
+              <!-- Clean 3-Spread Magazine Switcher -->
+              <nav class="flex flex-wrap gap-5 sm:gap-8 text-sm sm:text-base font-editorial">
+                ${[
+                  { id: "programy", label: "I. Úvodník & Kapitoly" },
+                  { id: "cesta", label: "II. Pět zastavení & Praxe" },
+                  { id: "autorky", label: "III. Autorky & Kolofon" }
+                ].map((tab) => {
+                  const active = view === tab.id;
+                  return `
+                    <button
+                      onclick="PROTO.setEView('${tab.id}')"
+                      class="pb-1 cursor-pointer transition-all ${
+                        active
+                          ? "border-b-2 border-[#C85232] text-[#142822] font-bold"
+                          : "italic text-[#6B7D73] hover:text-[#142822]"
+                      }"
+                    >
+                      ${tab.label}
+                    </button>
+                  `;
+                }).join("")}
+              </nav>
+            ` : `
+              <nav class="flex flex-wrap gap-6 text-sm font-editorial italic text-[#142822]">
+                <a href="#e-uvodnik" class="hover:text-[#C85232]">I. Úvodník</a>
+                <a href="#e-rejstrik" class="hover:text-[#C85232]">II. Kapitoly (13)</a>
+                <a href="#e-cesta" class="hover:text-[#C85232]">III. Pět zastavení</a>
+                <a href="#e-studie" class="hover:text-[#C85232]">IV. Reportáž</a>
+                <a href="#e-autorky" class="hover:text-[#C85232]">V. Autorky</a>
+              </nav>
+            `}
           </div>
         </header>
 
-        <!-- CHAPTER I: Editorial Spread Hero -->
-        <section id="e-uvodnik" class="max-w-6xl mx-auto px-6 sm:px-12 py-14 sm:py-20 border-b border-[#142822]/20">
-          <div class="grid lg:grid-cols-12 gap-12 items-start">
-            <div class="lg:col-span-7 space-y-6">
-              <div class="font-mono text-xs uppercase tracking-widest text-[#C85232]">KAPITOLA I. — FILOZOFIE VZDĚLÁVÁNÍ</div>
-              <h1 class="font-editorial text-4xl sm:text-6xl leading-[1.08] font-normal text-[#142822]">
-                Každý mozek je originál. Když pochopíte jeho genetický kód, <em class="text-[#C85232]">přestanete bojovat s větrnými mlýny.</em>
-              </h1>
-              <p class="text-lg text-[#142822]/80 leading-relaxed pt-2">
-                Vzděláváme prožitkem. Spojujeme biostrukturální analýzu osobnosti <strong>Structogram®</strong> (zvolenou společností Microsoft školením roku), trénink paměti, NLP a strategické provázení sboroven i firemních týmů.
-              </p>
-              <div class="pt-4 flex flex-wrap items-center gap-8">
+        ${showProgramy ? `
+          <!-- CHAPTER I: Concise Editorial Spread Hero -->
+          <section id="e-uvodnik" class="max-w-6xl mx-auto px-6 sm:px-12 py-12 sm:py-14 border-b border-[#142822]/20">
+            <div class="grid lg:grid-cols-12 gap-10 items-center">
+              <div class="lg:col-span-7 space-y-5">
+                <div class="font-mono text-xs uppercase tracking-widest text-[#C85232]">KAPITOLA I. — FILOZOFIE VZDĚLÁVÁNÍ</div>
+                <h1 class="font-editorial text-4xl sm:text-5xl leading-[1.1] font-normal text-[#142822]">
+                  Každý mozek je originál. Když pochopíte jeho genetický kód, <em class="text-[#C85232]">přestanete bojovat s větrnými mlýny.</em>
+                </h1>
+                <p class="text-base sm:text-lg text-[#142822]/80 leading-relaxed">
+                  Vzděláváme prožitkem. Spojujeme biostrukturální analýzu <strong>Structogram®</strong>, trénink paměti a strategické provázení sboroven i firemních týmů.
+                </p>
+                <div class="pt-2 flex flex-wrap items-center gap-8">
+                  <button
+                    onclick="PROTO.triggerInquiry('Magazínový lookbook — domluvit setkání u kávy')"
+                    class="border-b-2 border-[#C85232] pb-1 font-editorial italic text-xl text-[#C85232] hover:text-[#142822] hover:border-[#142822] transition-colors cursor-pointer"
+                  >
+                    Domluvit nezávazné setkání u kávy →
+                  </button>
+                  <span class="text-xs font-mono uppercase tracking-wider text-[#6B7D73]">Akreditace MŠMT & MPSV</span>
+                </div>
+              </div>
+
+              <div class="lg:col-span-5">
+                <img src="${DATA.photos.heroOnas}" alt="Seminář A co dál" class="w-full aspect-4/3 object-cover" />
+                <div class="flex justify-between text-[11px] font-mono text-[#6B7D73] pt-2">
+                  <span>ARCHIV A CO DÁL</span>
+                  <button onclick="PROTO.setEView('autorky')" class="text-[#C85232] hover:underline cursor-pointer">POZNAT 4 AUTORKY →</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- CHAPTER II: Book-Style Table of Contents for Programs (6 Flagship First + Progressive Disclosure) -->
+          <section id="e-rejstrik" class="max-w-6xl mx-auto px-6 sm:px-12 py-14 border-b border-[#142822]/20">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+              <div>
+                <div class="font-mono text-xs uppercase tracking-widest text-[#C85232]">OBSAH STUDIJNÍCH PROGRAMŮ</div>
+                <h2 class="font-editorial text-3xl sm:text-4xl mt-1">Tematické okruhy (Kliknutím otevřete kapitolu)</h2>
+              </div>
+
+              <!-- Minimalist Underline Filter Tabs -->
+              <div class="flex flex-wrap gap-5 text-xs sm:text-sm">
+                ${DATA.pillars.map((p) => {
+                  const active = state.ePillar === p.id;
+                  return `
+                    <button
+                      onclick="PROTO.setEPillar('${p.id}')"
+                      class="pb-1 cursor-pointer transition-colors ${
+                        active
+                          ? "border-b-2 border-[#C85232] font-bold text-[#142822]"
+                          : "text-[#6B7D73] hover:text-[#142822]"
+                      }"
+                    >
+                      ${p.label} (${p.count})
+                    </button>
+                  `;
+                }).join("")}
+              </div>
+            </div>
+
+            <!-- Editorial Index Lines -->
+            <div class="divide-y divide-[#142822]/15 border-t border-b border-[#142822]/15">
+              ${visibleTopics.map((t) => {
+                const isOpen = state.eOpenTopicId === t.id;
+                return `
+                  <article class="py-4 sm:py-5">
+                    <div
+                      onclick="PROTO.toggleETopic('${t.id}')"
+                      class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 cursor-pointer group"
+                    >
+                      <div class="flex items-baseline gap-4">
+                        <span class="font-editorial italic text-xl text-[#C85232] w-7 shrink-0">${t.number}.</span>
+                        <div>
+                          <h3 class="font-editorial text-xl sm:text-2xl group-hover:text-[#C85232] transition-colors">
+                            ${t.title}
+                          </h3>
+                          <p class="text-xs sm:text-sm text-[#6B7D73] mt-0.5 line-clamp-1">${t.subtitle}</p>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-4 sm:pl-4 shrink-0 font-mono text-[11px] uppercase tracking-widest text-[#142822]/70">
+                        <span class="hidden md:inline">${t.pillarLabel}</span>
+                        <span class="text-[#C85232] font-bold">${isOpen ? "[ Zavřít − ]" : "[ Sylabus + ]"}</span>
+                      </div>
+                    </div>
+
+                    ${isOpen ? `
+                      <div class="mt-5 sm:ml-11 pt-5 border-t border-[#142822]/15 grid md:grid-cols-12 gap-6">
+                        <div class="md:col-span-4 space-y-2 text-xs font-mono text-[#6B7D73]">
+                          <div class="text-[#142822] font-bold uppercase">Specifikace kapitoly</div>
+                          <div>FORMÁT: ${t.format}</div>
+                          ${t.accreditation ? `<div class="text-[#C85232]">AKREDITACE: ${t.accreditation}</div>` : ""}
+                          <div class="pt-2">
+                            <button
+                              onclick="PROTO.triggerInquiry('Kapitola ${t.number}: ${t.title}')"
+                              class="underline text-[#C85232] font-bold uppercase tracking-widest cursor-pointer"
+                            >
+                              Poptat tuto kapitolu →
+                            </button>
+                          </div>
+                        </div>
+                        <div class="md:col-span-8 space-y-2 text-sm sm:text-base text-[#142822]/90">
+                          <div class="font-editorial italic text-base text-[#142822] mb-1">Co vám tato kapitola přinese:</div>
+                          ${t.points.map((pt) => `
+                            <p class="leading-relaxed">— ${pt}</p>
+                          `).join("")}
+                        </div>
+                      </div>
+                    ` : ""}
+                  </article>
+                `;
+              }).join("")}
+            </div>
+
+            ${isFocused && state.ePillar === "all" ? `
+              <div class="mt-8 flex flex-wrap items-center justify-between gap-4">
                 <button
-                  onclick="PROTO.triggerInquiry('Magazínový lookbook — domluvit setkání u kávy')"
-                  class="border-b-2 border-[#C85232] pb-1 font-editorial italic text-xl text-[#C85232] hover:text-[#142822] hover:border-[#142822] transition-colors cursor-pointer"
+                  onclick="PROTO.toggleEShowAllCourses()"
+                  class="font-editorial italic text-lg text-[#C85232] hover:text-[#142822] underline underline-offset-4 cursor-pointer"
                 >
-                  Domluvit nezávazné setkání u kávy →
+                  ${state.eShowAllCourses
+                    ? "Zobrazit pouze 6 hlavních kapitol ↑"
+                    : `Listovat všemi 13 kapitolami (+${hiddenTopicsCount} dalších) ↓`
+                  }
                 </button>
-                <span class="text-xs font-mono uppercase tracking-wider text-[#6B7D73]">Akreditace MŠMT & MPSV</span>
+                <button
+                  onclick="PROTO.setEView('cesta')"
+                  class="font-mono text-xs uppercase tracking-widest text-[#142822] border-b border-[#142822] pb-1 hover:text-[#C85232] hover:border-[#C85232] cursor-pointer"
+                >
+                  Číst dál: II. Pět zastavení & Praxe →
+                </button>
               </div>
-            </div>
+            ` : ""}
+          </section>
+        ` : ""}
 
-            <div class="lg:col-span-5 space-y-4">
-              <img src="${DATA.photos.heroOnas}" alt="Seminář A co dál" class="w-full aspect-4/3 object-cover" />
-              <div class="flex justify-between text-xs font-mono text-[#6B7D73] pt-1">
-                <span>ARCHIV A CO DÁL</span>
-                <span>ZÁŽITKOVÝ WORKSHOP PRO TÝMY</span>
-              </div>
-              <blockquote class="font-editorial italic text-lg text-[#142822]/85 pt-4 border-t border-[#142822]/15">
-                ${DATA.foundingStory.quote}
-              </blockquote>
-            </div>
-          </div>
-        </section>
+        ${showCesta ? `
+          <!-- CHAPTER III: Interactive 5-Step Editorial Storyboard -->
+          <section id="e-cesta" class="max-w-6xl mx-auto px-6 sm:px-12 py-14 border-b border-[#142822]/20">
+            <div class="font-mono text-xs uppercase tracking-widest text-[#C85232]">KAPITOLA II. — PRŮBĚH SPOLUPRÁCE</div>
+            <h2 class="font-editorial text-3xl sm:text-4xl mt-1 mb-8">Pět zastavení na společné cestě (Klikněte na krok)</h2>
 
-        <!-- CHAPTER II: Book-Style Table of Contents for All 13 Programs (Zero boxes!) -->
-        <section id="e-rejstrik" class="max-w-6xl mx-auto px-6 sm:px-12 py-16 border-b border-[#142822]/20">
-          <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-            <div>
-              <div class="font-mono text-xs uppercase tracking-widest text-[#C85232]">KAPITOLA II. — OBSAH STUDIJNÍCH PROGRAMŮ</div>
-              <h2 class="font-editorial text-4xl sm:text-5xl mt-2">Třináct tematických okruhů</h2>
-            </div>
-
-            <!-- Minimalist Underline Filter Tabs -->
-            <div class="flex flex-wrap gap-6 text-sm">
-              ${DATA.pillars.map((p) => {
-                const active = state.ePillar === p.id;
+            <!-- Horizontal Roman Numeral Step Selector (No boxes, just typographic tabs) -->
+            <div class="grid grid-cols-5 border-b border-[#142822]/20 pb-4 mb-8 gap-4">
+              ${DATA.steps.map((s) => {
+                const active = state.eActiveStep === s.step;
                 return `
                   <button
-                    onclick="PROTO.setEPillar('${p.id}')"
-                    class="pb-1 cursor-pointer transition-colors ${
-                      active
-                        ? "border-b-2 border-[#C85232] font-bold text-[#142822]"
-                        : "text-[#6B7D73] hover:text-[#142822]"
-                    }"
+                    onclick="PROTO.setEStep(${s.step})"
+                    class="text-left cursor-pointer group ${active ? 'text-[#C85232]' : 'text-[#6B7D73] hover:text-[#142822]'}"
                   >
-                    ${p.label} (${p.count})
+                    <div class="font-editorial italic text-2xl">0${s.step}</div>
+                    <div class="text-xs sm:text-sm font-bold mt-0.5 ${active ? 'underline underline-offset-8' : ''}">${s.title}</div>
                   </button>
                 `;
               }).join("")}
             </div>
-          </div>
 
-          <!-- Editorial Index Lines with Dotted Leaders -->
-          <div class="divide-y divide-[#142822]/15">
-            ${filteredTopics.map((t) => {
-              const isOpen = state.eOpenTopicId === t.id;
-              return `
-                <article class="py-6">
-                  <div
-                    onclick="PROTO.toggleETopic('${t.id}')"
-                    class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 cursor-pointer group"
-                  >
-                    <div class="flex items-baseline gap-5">
-                      <span class="font-editorial italic text-2xl text-[#C85232] w-8">${t.number}.</span>
-                      <div>
-                        <h3 class="font-editorial text-2xl sm:text-3xl group-hover:text-[#C85232] transition-colors">
-                          ${t.title}
-                        </h3>
-                        <p class="text-sm text-[#6B7D73] mt-1">${t.subtitle}</p>
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-4 sm:pl-4 shrink-0 font-mono text-xs uppercase tracking-widest text-[#142822]/70">
-                      <span>${t.pillarLabel}</span>
-                      <span class="text-[#C85232] font-bold">${isOpen ? "[ Zavřít kapitolu ]" : "[ Číst sylabus ]"}</span>
-                    </div>
-                  </div>
-
-                  ${isOpen ? `
-                    <div class="mt-6 sm:ml-13 pt-6 border-t border-[#142822]/15 grid md:grid-cols-12 gap-8">
-                      <div class="md:col-span-4 space-y-3 text-xs font-mono text-[#6B7D73]">
-                        <div class="text-[#142822] font-bold uppercase">Specifikace programu</div>
-                        <div>FORMÁT: ${t.format}</div>
-                        ${t.accreditation ? `<div class="text-[#C85232]">AKREDITACE: ${t.accreditation}</div>` : ""}
-                        <div class="pt-3">
-                          <button
-                            onclick="PROTO.triggerInquiry('Kapitola ${t.number}: ${t.title}')"
-                            class="underline text-[#C85232] font-bold uppercase tracking-widest cursor-pointer"
-                          >
-                            Poptat tuto kapitolu →
-                          </button>
-                        </div>
-                      </div>
-                      <div class="md:col-span-8 space-y-2.5 text-base text-[#142822]/90">
-                        <div class="font-editorial italic text-lg text-[#142822] mb-2">Společně s námi v této kapitole:</div>
-                        ${t.points.map((pt) => `
-                          <p class="leading-relaxed">— ${pt}</p>
-                        `).join("")}
-                      </div>
-                    </div>
-                  ` : ""}
-                </article>
-              `;
-            }).join("")}
-          </div>
-        </section>
-
-        <!-- CHAPTER III: Interactive 5-Step Editorial Storyboard -->
-        <section id="e-cesta" class="max-w-6xl mx-auto px-6 sm:px-12 py-16 border-b border-[#142822]/20">
-          <div class="font-mono text-xs uppercase tracking-widest text-[#C85232]">KAPITOLA III. — PRŮBĚH SPOLUPRÁCE</div>
-          <h2 class="font-editorial text-4xl sm:text-5xl mt-2 mb-10">Pět zastavení na společné cestě</h2>
-
-          <!-- Horizontal Roman Numeral Step Selector (No boxes, just typographic tabs) -->
-          <div class="grid grid-cols-5 border-b border-[#142822]/20 pb-4 mb-10 gap-4">
-            ${DATA.steps.map((s) => {
-              const active = state.eActiveStep === s.step;
-              return `
-                <button
-                  onclick="PROTO.setEStep(${s.step})"
-                  class="text-left cursor-pointer group ${active ? 'text-[#C85232]' : 'text-[#6B7D73] hover:text-[#142822]'}"
-                >
-                  <div class="font-editorial italic text-2xl sm:text-3xl">0${s.step}</div>
-                  <div class="text-xs sm:text-sm font-bold mt-1 ${active ? 'underline underline-offset-8' : ''}">${s.title}</div>
-                </button>
-              `;
-            }).join("")}
-          </div>
-
-          <!-- Active Step Editorial Spread -->
-          <div class="grid md:grid-cols-12 gap-10 items-center">
-            <div class="md:col-span-4 flex items-center gap-6">
-              <img src="${activeStepObj.image}" alt="${activeStepObj.title}" class="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover" />
-              <div>
-                <div class="font-mono text-xs uppercase tracking-widest text-[#C85232]">KROK 0${activeStepObj.step} / 05</div>
-                <div class="font-editorial text-3xl mt-1">${activeStepObj.title}</div>
-                <div class="text-xs text-[#6B7D73] mt-1">${activeStepObj.subtitle}</div>
+            <!-- Active Step Editorial Spread -->
+            <div class="grid md:grid-cols-12 gap-8 items-center">
+              <div class="md:col-span-5 flex items-center gap-5">
+                <img src="${activeStepObj.image}" alt="${activeStepObj.title}" class="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover" />
+                <div>
+                  <div class="font-mono text-xs uppercase tracking-widest text-[#C85232]">ZASTAVENÍ 0${activeStepObj.step} / 05</div>
+                  <div class="font-editorial text-2xl sm:text-3xl mt-1">${activeStepObj.title}</div>
+                  <div class="text-xs text-[#6B7D73] mt-0.5">${activeStepObj.subtitle}</div>
+                </div>
+              </div>
+              <div class="md:col-span-7">
+                <p class="font-editorial text-xl sm:text-2xl leading-relaxed text-[#142822]">
+                  „${activeStepObj.text}“
+                </p>
               </div>
             </div>
-            <div class="md:col-span-8">
-              <p class="font-editorial text-2xl sm:text-3xl leading-relaxed text-[#142822]">
-                „${activeStepObj.text}“
+          </section>
+
+          <!-- CHAPTER IV: Concise Reportáž ze sborovny ZŠ Hlučín - Rovniny -->
+          <section id="e-studie" class="max-w-6xl mx-auto px-6 sm:px-12 py-14 border-b border-[#142822]/20">
+            <div class="grid lg:grid-cols-12 gap-10 items-center">
+              <div class="lg:col-span-6">
+                <div class="font-mono text-xs uppercase tracking-widest text-[#C85232]">REPORTÁŽ Z PRAXE • 52 PEDAGOGŮ</div>
+                <h2 class="font-editorial text-3xl sm:text-4xl mt-2 leading-tight">${DATA.caseStudy.school}</h2>
+                <blockquote class="font-editorial italic text-xl text-[#142822]/90 mt-4 leading-relaxed">
+                  „Seminář předčil mé očekávání. Oceňuji praktické pojetí a okamžité využití v praxi.“
+                </blockquote>
+                <div class="text-xs font-mono uppercase tracking-wider text-[#6B7D73] mt-2">
+                  — ${DATA.caseStudy.author}, ${DATA.caseStudy.role}
+                </div>
+              </div>
+
+              <div class="lg:col-span-6 space-y-5 border-t lg:border-t-0 lg:border-l border-[#142822]/15 pt-6 lg:pt-0 lg:pl-10">
+                <div class="font-mono text-xs uppercase tracking-widest text-[#6B7D73]">ZÁPISKY ÚČASTNÍKŮ ZE SBOROVNY:</div>
+                ${DATA.caseStudy.testimonials.slice(0, 2).map((q) => `
+                  <blockquote class="pb-4 border-b border-[#142822]/15 last:border-b-0 last:pb-0">
+                    <p class="font-editorial italic text-lg text-[#142822]">${q.text}</p>
+                    <footer class="text-[11px] font-mono uppercase tracking-wider text-[#C85232] mt-1">• ${q.tag}</footer>
+                  </blockquote>
+                `).join("")}
+              </div>
+            </div>
+
+            ${isFocused ? `
+              <div class="mt-10 pt-6 border-t border-[#142822]/15 flex justify-end">
+                <button
+                  onclick="PROTO.setEView('autorky')"
+                  class="font-mono text-xs uppercase tracking-widest text-[#142822] border-b border-[#142822] pb-1 hover:text-[#C85232] hover:border-[#C85232] cursor-pointer"
+                >
+                  Číst dál: III. Autorky & Kolofon →
+                </button>
+              </div>
+            ` : ""}
+          </section>
+        ` : ""}
+
+        ${showAutorky ? `
+          <!-- CHAPTER V: Autorky & Kolofon (Concise with Expandable Bios) -->
+          <section id="e-autorky" class="max-w-6xl mx-auto px-6 sm:px-12 py-14 border-b border-[#142822]/20">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+              <div>
+                <div class="font-mono text-xs uppercase tracking-widest text-[#C85232]">KAPITOLA III. — AUTORKY PROJEKTU</div>
+                <h2 class="font-editorial text-3xl sm:text-4xl mt-1">Osobní garance čtyř lektorek</h2>
+              </div>
+              <p class="font-editorial italic text-base text-[#6B7D73] max-w-md">
+                „Spojilo se přátelství, vzájemná úcta, respekt a důvěra.“
               </p>
             </div>
-          </div>
-        </section>
 
-        <!-- CHAPTER IV: Reportáž ze sborovny ZŠ Hlučín - Rovniny -->
-        <section id="e-studie" class="max-w-6xl mx-auto px-6 sm:px-12 py-16 border-b border-[#142822]/20">
-          <div class="grid lg:grid-cols-12 gap-12">
-            <div class="lg:col-span-5">
-              <div class="font-mono text-xs uppercase tracking-widest text-[#C85232]">KAPITOLA IV. — REPORTÁŽ Z PRAXE</div>
-              <h2 class="font-editorial text-4xl mt-2 leading-tight">${DATA.caseStudy.school}</h2>
-              <p class="text-base text-[#142822]/80 mt-4 leading-relaxed">${DATA.caseStudy.summary}</p>
-              <div class="mt-8 pt-6 border-t border-[#142822]/20 flex gap-10">
-                <div>
-                  <div class="font-editorial text-5xl text-[#C85232]">52</div>
-                  <div class="text-xs font-mono uppercase text-[#6B7D73] mt-1">Pedagogů v týmu</div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              ${DATA.team.map((m) => {
+                const isExpanded = state.eExpandedTeamId === m.id;
+                return `
+                  <div class="flex flex-col justify-between">
+                    <div>
+                      <img src="${m.photo}" alt="${m.name}" class="w-full aspect-4/4 object-cover object-top grayscale hover:grayscale-0 transition-all duration-500" />
+                      <h3 class="font-editorial text-2xl mt-3">${m.name}</h3>
+                      <div class="text-xs font-mono uppercase text-[#C85232] mt-0.5">${m.role}</div>
+                      ${isExpanded || !isFocused ? `
+                        <p class="text-xs sm:text-sm text-[#142822]/80 mt-2.5 pt-2.5 border-t border-[#142822]/15 leading-relaxed">${m.shortBio}</p>
+                      ` : ""}
+                      <button
+                        onclick="PROTO.toggleETeam('${m.id}')"
+                        class="mt-2 font-editorial italic text-sm text-[#C85232] hover:underline cursor-pointer"
+                      >
+                        ${isExpanded ? "Skrýt medailonek ↑" : "Číst medailonek ↓"}
+                      </button>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-[#142822]/15 font-mono text-xs space-y-0.5">
+                      <a href="tel:${m.phone.replace(/\s+/g, '')}" class="block font-bold">${m.phone}</a>
+                      <a href="mailto:${m.email}" class="block text-[#6B7D73] hover:underline truncate">${m.email}</a>
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+
+            <!-- Selected Clients Strip inside Autorky & Kolofon -->
+            <div class="mt-14 pt-10 border-t border-[#142822]/20">
+              <div class="flex flex-wrap items-baseline justify-between gap-4 mb-6">
+                <div class="font-mono text-xs uppercase tracking-widest text-[#6B7D73]">
+                  VYBRANÉ ORGANIZACE, KTERÉ S NÁMI ROSTOU (CELKEM 47 KLIENTŮ):
                 </div>
-                <div>
-                  <div class="font-editorial text-5xl text-[#142822]">1,08</div>
-                  <div class="text-xs font-mono uppercase text-[#6B7D73] mt-1">Hodnocení přínosu</div>
-                </div>
+                <span class="font-editorial italic text-sm text-[#6B7D73]">Firmy • Školy • Veřejná správa</span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6 items-center">
+                ${DATA.clients.firmy.slice(0, 6).map((c) => `
+                  <div class="flex flex-col items-center text-center">
+                    <img src="${c.logo}" alt="${c.name}" class="h-9 max-w-[100px] object-contain grayscale opacity-75" />
+                    <span class="font-mono text-[10px] text-[#6B7D73] mt-1.5 line-clamp-1">${c.name}</span>
+                  </div>
+                `).join("")}
               </div>
             </div>
-            <div class="lg:col-span-7 space-y-6">
-              ${DATA.caseStudy.testimonials.slice(0, 3).map((q) => `
-                <blockquote class="pb-6 border-b border-[#142822]/15 last:border-b-0">
-                  <p class="font-editorial italic text-xl sm:text-2xl text-[#142822]">„${q.quote}“</p>
-                  <footer class="text-xs font-mono uppercase tracking-wider text-[#6B7D73] mt-2">— ${q.author}</footer>
-                </blockquote>
-              `).join("")}
-            </div>
-          </div>
-        </section>
+          </section>
+        ` : ""}
 
-        <!-- CHAPTER V: Autorky & Kolofon -->
-        <section id="e-autorky" class="max-w-6xl mx-auto px-6 sm:px-12 py-16">
-          <div class="font-mono text-xs uppercase tracking-widest text-[#C85232]">KAPITOLA V. — AUTORKY PROJEKTU</div>
-          <h2 class="font-editorial text-4xl sm:text-5xl mt-2 mb-12">Osobní garance čtyř lektorek</h2>
-
-          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
-            ${DATA.team.map((m) => `
-              <div>
-                <img src="${m.photo}" alt="${m.name}" class="w-full aspect-4/4 object-cover object-top grayscale hover:grayscale-0 transition-all duration-500" />
-                <h3 class="font-editorial text-2xl mt-4">${m.name}</h3>
-                <div class="text-xs font-mono uppercase text-[#C85232] mt-0.5">${m.role}</div>
-                <p class="text-sm text-[#142822]/80 mt-3 leading-relaxed">${m.shortBio}</p>
-                <div class="mt-4 pt-3 border-t border-[#142822]/15 font-mono text-xs space-y-1">
-                  <a href="tel:${m.phone.replace(/\s+/g, '')}" class="block font-bold">${m.phone}</a>
-                  <a href="mailto:${m.email}" class="block text-[#6B7D73] hover:underline">${m.email}</a>
-                </div>
-              </div>
-            `).join("")}
+        <!-- Magazine Colophon Footer -->
+        <footer class="max-w-6xl mx-auto px-6 sm:px-12 py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs font-mono text-[#6B7D73]">
+          <div>
+            <strong class="text-[#142822]">A CO DÁL, s.r.o.</strong> (IČ: 01771264) • <strong class="text-[#142822]">A co dál – centrum rozvoje, z.ú.</strong> (IČ: 09557181)
           </div>
-        </section>
+          <div class="flex gap-6">
+            <a href="tel:+420604392543" class="text-[#142822] font-bold hover:text-[#C85232]">${DATA.brand.phone}</a>
+            <a href="mailto:kontakt@acodal.cz" class="text-[#C85232] font-bold hover:underline">${DATA.brand.email}</a>
+          </div>
+        </footer>
       </div>
     `;
   }
@@ -2086,15 +2516,15 @@
     // Surface current active state summary per Rule #5 ("Surface the state")
     let activeStateText = "";
     if (state.variant.startsWith("A")) {
-      activeStateText = `Barevná paleta: ${state.variant} | Filtr: ${state.aPillar} | Pravý panel (Drawer): ${state.aDrawerTopicId || "zavřený"} | Loga: ${state.aClientTab}`;
+      activeStateText = `Paleta: ${state.variant} | Režim: ${state.aDensity === "focused" ? `Stručný (Sekce: ${state.aView})` : "Vše pod sebou"} | Detail: ${state.aDrawerTopicId || "zavřený"}`;
     } else if (state.variant === "B") {
       activeStateText = `Cílová skupina: ${state.bAudience.toUpperCase()} | Vybraný kurz: ${state.bSelectedTopicId}`;
     } else if (state.variant === "C") {
-      activeStateText = `Složka mozku: ${state.cBrainColor.toUpperCase()} | Otevřený řádek: ${state.cOpenTopicId || "žádný"}`;
+      activeStateText = `Režim: ${state.cDensity === "focused" ? `3 listy (${state.cView})` : "Plný"} | Mozek: ${state.cBrainColor.toUpperCase()} | Řádek: ${state.cOpenTopicId || "žádný"}`;
     } else if (state.variant === "D") {
       activeStateText = `Věta: [${state.dQuiz.q1}, ${state.dQuiz.q2}, ${state.dQuiz.q3}] | Detail: ${state.dExpandedTopicId || "žádný"}`;
     } else if (state.variant === "E") {
-      activeStateText = `Okruh: ${state.ePillar} | Kapitola: ${state.eOpenTopicId || "žádná"} | Krok: 0${state.eActiveStep}`;
+      activeStateText = `Režim: ${state.eDensity === "focused" ? `3 dvojstrany (${state.eView})` : "Plný"} | Okruh: ${state.ePillar} | Kapitola: ${state.eOpenTopicId || "žádná"}`;
     }
 
     return `
@@ -2105,78 +2535,116 @@
         </div>
       ` : ""}
 
-      <!-- Floating Bottom-Center Switcher Bar -->
-      <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[96vw] max-w-5xl pointer-events-none">
-        <div class="pointer-events-auto bg-zinc-950/95 text-white backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl px-4 py-3">
-          ${state.showStateHud ? `
-            <div class="pb-2.5 mb-2.5 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-[11px]">
-              <div class="text-zinc-300">
-                <span class="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 font-mono font-bold mr-1.5">PROTOTYPE</span>
-                <strong>${currentObj.czTitle}:</strong> <span class="text-zinc-400">${currentObj.philosophy}</span>
+      ${state.switcherMinimized ? `
+        <!-- Minimized Corner Pill -->
+        <div class="fixed bottom-4 right-4 z-50 flex items-center gap-1 bg-zinc-950/90 text-white backdrop-blur-xl border border-white/20 rounded-full shadow-2xl px-2.5 py-1.5 text-xs">
+          <button
+            onclick="PROTO.cycleVariant(-1)"
+            title="Předchozí varianta (←)"
+            class="w-6 h-6 rounded-full hover:bg-white/15 flex items-center justify-center font-bold cursor-pointer"
+          >
+            ←
+          </button>
+          <button
+            onclick="PROTO.toggleSwitcher()"
+            title="Rozbalit přepínač variant (klávesa H)"
+            class="px-2 py-0.5 font-bold flex items-center gap-1.5 hover:text-[#E77817] transition-colors cursor-pointer"
+          >
+            <span class="text-[#E77817]">${currentObj.key}</span>
+            <span class="hidden sm:inline text-zinc-300">${currentObj.name.split("·")[0].trim()}</span>
+            <span class="text-[10px] text-zinc-400 ml-0.5">▲</span>
+          </button>
+          <button
+            onclick="PROTO.cycleVariant(1)"
+            title="Další varianta (→)"
+            class="w-6 h-6 rounded-full hover:bg-white/15 flex items-center justify-center font-bold cursor-pointer"
+          >
+            →
+          </button>
+        </div>
+      ` : `
+        <!-- Floating Bottom-Center Switcher Bar -->
+        <div class="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 max-w-[96vw] pointer-events-none">
+          <div class="pointer-events-auto bg-zinc-950/95 text-white backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl px-3.5 py-2">
+            ${state.showStateHud ? `
+              <div class="pb-2 mb-2 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-[11px] max-w-4xl">
+                <div class="text-zinc-300">
+                  <span class="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 font-mono font-bold mr-1.5">PROTOTYPE</span>
+                  <strong>${currentObj.czTitle}:</strong> <span class="text-zinc-400">${currentObj.philosophy}</span>
+                </div>
+                <div class="font-mono text-[10px] text-emerald-400 shrink-0">
+                  Stav: ${activeStateText}
+                </div>
               </div>
-              <div class="font-mono text-[10px] text-emerald-400 shrink-0">
-                Stav: ${activeStateText}
+            ` : ""}
+
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <!-- Left Arrow + Variant Label + Right Arrow -->
+              <div class="flex items-center gap-1.5">
+                <button
+                  onclick="PROTO.cycleVariant(-1)"
+                  title="Předchozí varianta (šipka vlevo ←)"
+                  class="w-7 h-7 rounded-lg bg-white/10 hover:bg-[#E77817] text-white text-xs font-bold flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  ←
+                </button>
+
+                <div class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-bold whitespace-nowrap">
+                  <span class="text-[#E77817]">${currentObj.key}</span>
+                  <span class="hidden md:inline text-zinc-300 font-normal ml-1">${currentObj.czTitle.split("(")[0].trim()}</span>
+                </div>
+
+                <button
+                  onclick="PROTO.cycleVariant(1)"
+                  title="Další varianta (šipka vpravo →)"
+                  class="w-7 h-7 rounded-lg bg-white/10 hover:bg-[#E77817] text-white text-xs font-bold flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  →
+                </button>
+              </div>
+
+              <!-- Direct Variant Pill Buttons -->
+              <div class="flex flex-wrap items-center gap-1">
+                ${VARIANTS.map((v) => {
+                  const isCurr = v.key === state.variant;
+                  const tooltip = `${v.key}: ${v.name} — ${v.czTitle}`;
+                  return `
+                    <button
+                      onclick="PROTO.setVariant('${v.key}')"
+                      title="${tooltip}"
+                      class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        isCurr
+                          ? "bg-[#E77817] text-white shadow-xs"
+                          : "bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white"
+                      }"
+                    >
+                      ${v.key.startsWith("A") ? v.key : `${v.key}: ${v.name.split(" ")[0]}`}
+                    </button>
+                  `;
+                }).join("")}
+              </div>
+
+              <!-- Toggle Info HUD & Hide Controls -->
+              <div class="flex items-center gap-1">
+                <button
+                  onclick="PROTO.toggleHud()"
+                  title="Zobrazit/skrýt popis varianty"
+                  class="text-[11px] font-mono text-zinc-400 hover:text-white px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 cursor-pointer"
+                >
+                  ${state.showStateHud ? "Info ↓" : "Info ↑"}
+                </button>
+                <button
+                  onclick="PROTO.toggleSwitcher()"
+                  title="Minimalizovat lištu do rohu (klávesa H)"
+                  class="text-[11px] font-mono text-zinc-300 hover:text-white px-2 py-1 rounded-lg bg-white/10 hover:bg-[#E77817] transition-colors cursor-pointer"
+                >
+                  Skrýt lištu ✕
+                </button>
               </div>
             </div>
-          ` : ""}
-
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <!-- Left Arrow + Variant Label + Right Arrow (Required 3 pieces from UI.md) -->
-            <div class="flex items-center gap-2">
-              <button
-                onclick="PROTO.cycleVariant(-1)"
-                title="Předchozí varianta (šipka vlevo ←)"
-                class="w-9 h-9 rounded-xl bg-white/10 hover:bg-[#E77817] text-white font-bold flex items-center justify-center transition-colors cursor-pointer"
-              >
-                ←
-              </button>
-
-              <div class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs sm:text-sm font-bold">
-                <span class="text-[#E77817]">${currentObj.key}</span>
-                <span class="text-white">(${currentObj.name})</span>
-              </div>
-
-              <button
-                onclick="PROTO.cycleVariant(1)"
-                title="Další varianta (šipka vpravo →)"
-                class="w-9 h-9 rounded-xl bg-white/10 hover:bg-[#E77817] text-white font-bold flex items-center justify-center transition-colors cursor-pointer"
-              >
-                →
-              </button>
-            </div>
-
-            <!-- Direct Variant Pill Buttons -->
-            <div class="flex flex-wrap items-center gap-1.5">
-              ${VARIANTS.map((v) => {
-                const isCurr = v.key === state.variant;
-                const shortLabel = v.key.startsWith("A")
-                  ? v.name
-                  : `${v.key}: ${v.name.split(" ")[0]}`;
-                return `
-                  <button
-                    onclick="PROTO.setVariant('${v.key}')"
-                    class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      isCurr
-                        ? "bg-[#E77817] text-white shadow-xs"
-                        : "bg-white/5 hover:bg-white/15 text-zinc-400 hover:text-white"
-                    }"
-                  >
-                    ${shortLabel}
-                  </button>
-                `;
-              }).join("")}
-            </div>
-
-            <!-- Toggle State HUD -->
-            <button
-              onclick="PROTO.toggleHud()"
-              class="text-[11px] font-mono text-zinc-400 hover:text-white px-2 py-1 rounded bg-white/5 cursor-pointer"
-            >
-              ${state.showStateHud ? "Skrýt info ↓" : "Info o variantě ↑"}
-            </button>
           </div>
         </div>
-      </div>
+      `}
     `;
   }
 
